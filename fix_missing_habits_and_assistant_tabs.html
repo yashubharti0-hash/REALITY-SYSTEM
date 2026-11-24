@@ -1,0 +1,3627 @@
+<!DOCTYPE html>
+  <title>My Phone — Premium Android Smart Launcher</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter, Playfair Display, JetBrains Mono, Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&family=Playfair+Display:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    :root {
+      --accent: #ec4899;
+      --accent-soft: rgba(236, 72, 153, 0.25);
+      --glass-blur: 20px;
+      --glass-bg: rgba(255, 255, 255, 0.14);
+      --glass-bg-strong: rgba(255, 255, 255, 0.22);
+      --glass-border: rgba(255, 255, 255, 0.28);
+      --text-primary: #ffffff;
+      --text-secondary: rgba(255, 255, 255, 0.72);
+      --icon-size: 56px;
+      --icon-radius: 18px;
+      --icon-gap: 14px;
+      --grid-cols: 4;
+      --dock-size: 50px;
+      --dock-bg: var(--glass-bg-strong);
+      --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --anim-speed: 0.28s;
+      --anim-curve: cubic-bezier(0.22, 1, 0.36, 1);
+      --safe-top: env(safe-area-inset-top, 16px);
+      --safe-bottom: env(safe-area-inset-bottom, 16px);
+    }
+
+    body.light-mode {
+      --glass-bg: rgba(255, 255, 255, 0.58);
+      --glass-bg-strong: rgba(255, 255, 255, 0.78);
+      --glass-border: rgba(255, 255, 255, 0.75);
+      --text-primary: #0f172a;
+      --text-secondary: rgba(15, 23, 42, 0.65);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    input, textarea {
+      user-select: text;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: var(--font-family);
+      color: var(--text-primary);
+      background-color: #09090b;
+    }
+
+    /* Full-screen Wallpaper Layer */
+    #wallpaper-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background-size: cover;
+      background-position: center;
+      transition: background 0.6s cubic-bezier(0.22, 1, 0.36, 1), filter 0.4s ease;
+    }
+
+    /* Glassmorphism Utilities */
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur));
+      -webkit-backdrop-filter: blur(var(--glass-blur));
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14);
+      transition: background 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
+    }
+
+    .glass-strong {
+      background: var(--glass-bg-strong);
+      backdrop-filter: blur(calc(var(--glass-blur) + 6px));
+      -webkit-backdrop-filter: blur(calc(var(--glass-blur) + 6px));
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .custom-dock-bar {
+      background: var(--dock-bg);
+      backdrop-filter: blur(calc(var(--glass-blur) + 8px));
+      -webkit-backdrop-filter: blur(calc(var(--glass-blur) + 8px));
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.22);
+      transition: all 0.3s ease;
+    }
+
+    /* Custom Scrollbar Hiding */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* App Icon Styling */
+    .app-icon-box {
+      width: var(--icon-size);
+      height: var(--icon-size);
+      border-radius: var(--icon-radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform var(--anim-speed) var(--anim-curve), border-radius 0.2s ease, width 0.2s ease, height 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .app-icon-box.shape-teardrop {
+      border-radius: 50% 50% 10% 50% !important;
+    }
+
+    .app-icon-box:active {
+      transform: scale(0.9);
+    }
+
+    /* Nova Grid Dynamic Columns & Spacing */
+    .nova-grid {
+      display: grid;
+      grid-template-columns: repeat(var(--grid-cols), minmax(0, 1fr));
+      gap: var(--icon-gap) 12px;
+    }
+
+    .app-icon-box:active {
+      transform: scale(0.9);
+    }
+
+    /* Nova Grid Dynamic Columns */
+    .nova-grid {
+      display: grid;
+      grid-template-columns: repeat(var(--grid-cols), minmax(0, 1fr));
+      gap: 16px 12px;
+    }
+
+    /* Custom Range Sliders */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(128, 128, 128, 0.3);
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      border: 2px solid #ffffff;
+    }
+
+    /* App Drawer Transitions */
+    #app-drawer {
+      transform: translateY(100%);
+      transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+      will-change: transform;
+    }
+
+    #app-drawer.open {
+      transform: translateY(0%);
+    }
+
+    /* Subtle pulse for active items */
+    @keyframes popIn {
+      0% { opacity: 0; transform: scale(0.94) translateY(8px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .animate-pop {
+      animation: popIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    /* Progress Ring SVG Transition */
+    #habit-ring-circle {
+      transition: stroke-dashoffset 0.6s cubic-bezier(0.22, 1, 0.36, 1), stroke 0.3s ease;
+    }
+
+    /* Screen Torch Overlay */
+    #screen-torch-overlay {
+      background: #ffffff;
+      color: #0f172a;
+    }
+
+    /* Always-On Display (AOD) Lock Screen */
+    #aod-lock-screen {
+      background: radial-gradient(circle at 50% 25%, rgba(30, 30, 40, 0.96), #000000 85%);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+  </style>
+</head>
+<body>
+  <!-- Full-screen Dynamic Wallpaper -->
+  <div id="wallpaper-layer"></div>
+
+  <!-- Main App Shell -->
+  <div id="app-shell" class="relative z-10 w-full h-full flex flex-col justify-between max-w-lg mx-auto"
+       style="padding-top: max(14px, env(safe-area-inset-top)); padding-bottom: max(12px, env(safe-area-inset-bottom));">
+
+    <!-- ==================== TAB 1: HOME ==================== -->
+    <main id="tab-home" class="tab-view flex-1 flex flex-col px-4 overflow-hidden relative">
+      <!-- Top Header: Multi-Style Clock, Greeting, Habit Progress Ring -->
+      <header class="flex items-center justify-between pt-1 pb-2 shrink-0 gap-2">
+        <div id="clock-widget" class="cursor-pointer active:opacity-80 transition-opacity flex-1 min-w-0" title="Double-tap to toggle Dark/Light mode">
+          <!-- Digital Minimal Clock (Default) -->
+          <div id="clock-style-digital">
+            <div class="flex items-baseline gap-1.5">
+              <span id="clock-time" class="text-5xl sm:text-6xl font-extrabold tracking-tight leading-none">09:41</span>
+              <span id="clock-seconds" class="text-sm font-bold opacity-75">00</span>
+            </div>
+          </div>
+
+          <!-- Bold Editorial Clock -->
+          <div id="clock-style-editorial" class="hidden">
+            <div id="clock-editorial-text" class="text-4xl sm:text-5xl font-extrabold italic tracking-tight leading-none" style="font-family: 'Playfair Display', serif;">09:41 AM</div>
+          </div>
+
+          <!-- Stacked Split Clock -->
+          <div id="clock-style-stacked" class="hidden flex items-center gap-2">
+            <div class="glass-strong px-2.5 py-1 rounded-2xl text-3xl font-black leading-none" id="clock-stack-hr">09</div>
+            <div class="glass-strong px-2.5 py-1 rounded-2xl text-3xl font-black leading-none" style="color: var(--accent);" id="clock-stack-min">41</div>
+          </div>
+
+          <div id="clock-date" class="text-xs font-medium mt-1 opacity-80 truncate">Thursday, Nov 19</div>
+          <div id="greeting-text" class="text-xs sm:text-sm font-semibold mt-0.5 truncate" style="color: var(--accent);">Good morning, Yashu</div>
+        </div>
+
+        <!-- Right Header Cluster: Notifications + Habit Ring -->
+        <div class="flex items-center gap-2 shrink-0">
+          <button onclick="openNotificationSheet()" class="glass-card rounded-3xl p-2.5 flex flex-col items-center justify-center relative active:scale-95 transition-transform" aria-label="Notifications">
+            <div class="relative w-10 h-10 flex items-center justify-center">
+              <i data-lucide="bell" class="w-5 h-5"></i>
+              <span id="header-notif-badge" class="hidden absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-extrabold text-white flex items-center justify-center shadow" style="background: var(--accent);">3</span>
+            </div>
+            <span class="text-[10px] font-medium opacity-80">Alerts</span>
+          </button>
+
+          <!-- Daily Habits Progress Ring -->
+          <button onclick="switchTab('habits')" class="glass-card rounded-3xl p-2.5 flex flex-col items-center justify-center relative active:scale-95 transition-transform" aria-label="Habit Progress">
+            <div class="relative w-10 h-10 flex items-center justify-center">
+              <svg class="w-10 h-10 -rotate-90" viewBox="0 0 56 56">
+                <circle cx="28" cy="28" r="22" stroke="currentColor" stroke-opacity="0.18" stroke-width="5" fill="none" />
+                <circle id="habit-ring-circle" cx="28" cy="28" r="22" stroke="var(--accent)" stroke-width="5" stroke-linecap="round" fill="none"
+                        stroke-dasharray="138.23" stroke-dashoffset="138.23" />
+              </svg>
+              <span id="habit-ring-label" class="absolute text-[10px] font-bold">0/0</span>
+            </div>
+            <span class="text-[10px] font-medium opacity-80">Habits</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- QUICK SETTINGS PILL BAR -->
+      <div id="quick-settings-bar" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-2 shrink-0">
+        <button onclick="toggleQuickSetting('wifi')" id="qs-wifi" class="glass-card px-2.5 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1.5 shrink-0 active:scale-95">
+          <i data-lucide="wifi" class="w-3.5 h-3.5"></i>
+          <span>Wi-Fi</span>
+        </button>
+        <button onclick="toggleQuickSetting('bt')" id="qs-bt" class="glass-card px-2.5 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1.5 shrink-0 active:scale-95">
+          <i data-lucide="bluetooth" class="w-3.5 h-3.5"></i>
+          <span>BT</span>
+        </button>
+        <button onclick="toggleQuickSetting('dnd')" id="qs-dnd" class="glass-card px-2.5 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1.5 shrink-0 active:scale-95">
+          <i data-lucide="moon-star" class="w-3.5 h-3.5"></i>
+          <span>Focus</span>
+        </button>
+        <button onclick="toggleScreenTorch(true)" class="glass-card px-2.5 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1.5 shrink-0 active:scale-95">
+          <i data-lucide="flashlight" class="w-3.5 h-3.5"></i>
+          <span>Torch</span>
+        </button>
+        <button onclick="lockDeviceScreen()" class="glass-card px-2.5 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1.5 shrink-0 active:scale-95">
+          <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+          <span>Lock</span>
+        </button>
+      </div>
+
+      <!-- SCROLLABLE HOME CONTENT (Widgets + Popup Folders + Shortcuts) -->
+      <div id="home-scroll-area" class="flex-1 overflow-y-auto no-scrollbar flex flex-col justify-between pb-1">
+        <!-- HOME SCREEN WIDGETS STACK -->
+        <div id="home-widgets-stack" class="space-y-2 mb-2.5 shrink-0">
+          <!-- Weather & System Telemetry Row (Weather + Battery/Storage) -->
+          <div id="widget-weather-system-row" class="grid grid-cols-2 gap-2">
+            <!-- Live Weather Widget -->
+            <div id="widget-weather-card" onclick="openSettingsCategory('weather')" class="glass-card rounded-3xl p-3 flex flex-col justify-between cursor-pointer active:scale-[0.98]">
+              <div class="flex items-center justify-between">
+                <span id="weather-city-label" class="text-[11px] font-bold truncate opacity-80">Bengaluru</span>
+                <i id="weather-icon" data-lucide="sun" class="w-4 h-4 text-amber-300 shrink-0"></i>
+              </div>
+              <div class="flex items-baseline gap-1.5 my-1">
+                <span id="weather-temp-val" class="text-2xl font-extrabold">26°C</span>
+                <span id="weather-cond-label" class="text-[11px] opacity-75 truncate">Clear Sky</span>
+              </div>
+              <div id="weather-hi-lo" class="text-[10px] font-semibold opacity-70">H: 29° • L: 18°</div>
+            </div>
+
+            <!-- Battery & Storage Widget -->
+            <div id="widget-battery-card" class="glass-card rounded-3xl p-3 flex flex-col justify-between">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold opacity-80">Device Status</span>
+                <i id="battery-icon" data-lucide="battery-charging" class="w-4 h-4 text-emerald-400"></i>
+              </div>
+              <div class="my-1">
+                <div class="flex justify-between text-[11px] font-bold mb-1">
+                  <span id="battery-pct-label">88%</span>
+                  <span id="storage-pct-label" class="opacity-75">64/128 GB</span>
+                </div>
+                <div class="w-full h-1.5 rounded-full bg-white/15 overflow-hidden">
+                  <div id="battery-bar-fill" class="h-full rounded-full transition-all" style="width: 88%; background: var(--accent);"></div>
+                </div>
+              </div>
+              <div id="screen-time-mini" class="text-[10px] font-semibold opacity-75 truncate">Screen time: 1h 42m</div>
+            </div>
+          </div>
+
+          <!-- Analog + World Time Widget -->
+          <div id="widget-clock-card" class="glass-card rounded-3xl p-3 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <!-- Live Analog Clock Face -->
+              <div class="w-12 h-12 rounded-full glass-strong relative flex items-center justify-center shrink-0">
+                <div id="analog-hour" class="absolute w-0.5 h-3.5 bg-current rounded-full origin-bottom" style="bottom: 50%;"></div>
+                <div id="analog-min" class="absolute w-0.5 h-4.5 rounded-full origin-bottom" style="bottom: 50%; background: var(--accent);"></div>
+                <div id="analog-sec" class="absolute w-[1px] h-5 bg-rose-400 rounded-full origin-bottom" style="bottom: 50%;"></div>
+                <div class="w-1.5 h-1.5 rounded-full bg-white z-10"></div>
+              </div>
+              <div>
+                <div class="text-[11px] font-bold uppercase tracking-wider opacity-65">Local Time &amp; Focus</div>
+                <div id="widget-full-date" class="text-xs font-extrabold mt-0.5">Thursday, 19 November 2026</div>
+                <div class="text-[11px] opacity-80 mt-0.5 flex items-center gap-2">
+                  <span id="widget-focus-status">Focus Ready</span>
+                  <span>•</span>
+                  <span id="widget-week-label">Week 47</span>
+                </div>
+              </div>
+            </div>
+            <button onclick="openSettingsCategory('home')" class="glass-strong p-2 rounded-2xl opacity-80 hover:opacity-100" title="Customize Widgets">
+              <i data-lucide="sliders" class="w-4 h-4"></i>
+            </button>
+          </div>
+
+          <!-- Mini Weekly Calendar Strip + Upcoming Events Widget -->
+          <div id="widget-calendar-card" class="glass-card rounded-3xl px-3 py-2.5 space-y-2">
+            <div class="flex items-center justify-between px-1">
+              <span id="widget-cal-month" class="text-[11px] font-extrabold uppercase tracking-wider" style="color: var(--accent);">November 2026</span>
+              <button onclick="openSettingsCategory('calendar')" class="text-[10px] font-bold opacity-80 hover:opacity-100 flex items-center gap-1">
+                <i data-lucide="plus" class="w-3 h-3"></i>
+                <span>Event</span>
+              </button>
+            </div>
+            <div id="widget-calendar-strip" class="grid grid-cols-7 gap-1 text-center">
+              <!-- Populated dynamically -->
+            </div>
+            <!-- Upcoming Events List on Home -->
+            <div id="home-calendar-events" class="space-y-1 pt-1 border-t border-white/10">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <!-- POPUP FOLDERS ROW -->
+        <div id="home-folders-section" class="mb-2.5 shrink-0">
+          <div class="flex items-center justify-between mb-1.5 px-1">
+            <span class="text-[10px] font-extrabold uppercase tracking-wider opacity-70">Popup Folders</span>
+            <button onclick="openSettingsCategory('folders')" class="text-[10px] font-bold opacity-75 hover:opacity-100">+ Folder</button>
+          </div>
+          <div id="home-popup-folders-row" class="flex items-center gap-2.5 overflow-x-auto no-scrollbar pb-0.5">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Layout Controls Quick Bar -->
+        <div class="flex items-center justify-between mb-2 shrink-0">
+          <div class="glass-card rounded-full p-1 flex items-center gap-1 text-xs font-medium">
+            <button id="btn-mode-nova" onclick="setLauncherStyle('nova')" class="px-3 py-1 rounded-full transition-all">Nova</button>
+            <button id="btn-mode-niagara" onclick="setLauncherStyle('niagara')" class="px-3 py-1 rounded-full transition-all">Niagara</button>
+          </div>
+
+          <div class="flex items-center gap-1.5">
+            <button onclick="openShortcutModal()" class="glass-card px-2.5 py-1.5 rounded-full text-xs font-medium flex items-center gap-1 active:scale-95">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+              <span>Shortcut</span>
+            </button>
+            <button onclick="openDrawer()" class="glass-card px-2.5 py-1.5 rounded-full text-xs font-medium flex items-center gap-1 active:scale-95">
+              <i data-lucide="grid" class="w-3.5 h-3.5"></i>
+              <span>Apps</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- LAUNCHER VIEW A: NOVA (Icon Grid + Custom Glass Dock) -->
+        <section id="view-nova" class="flex-1 flex flex-col justify-between">
+          <!-- Main Grid Area -->
+          <div id="nova-grid-container" class="py-1">
+            <div id="nova-shortcuts-grid" class="nova-grid"></div>
+          </div>
+
+          <!-- Swipe Up Hint -->
+          <div onclick="openDrawer()" class="py-1 flex flex-col items-center justify-center opacity-60 hover:opacity-100 cursor-pointer shrink-0">
+            <i data-lucide="chevron-up" class="w-4 h-4"></i>
+            <span class="text-[10px] tracking-wider uppercase font-semibold">Swipe up for Smart Search &amp; Apps</span>
+          </div>
+        </section>
+
+        <!-- LAUNCHER VIEW B: NIAGARA (Minimal Text List + A-Z Side Scroller) -->
+        <section id="view-niagara" class="hidden flex-1 relative min-h-[220px]">
+          <div id="niagara-list" class="h-full overflow-y-auto no-scrollbar pr-9 py-1 space-y-2">
+            <!-- Populated dynamically -->
+          </div>
+
+          <!-- A-Z Side Scroller -->
+          <div id="niagara-az-bar" class="absolute right-0 top-1 bottom-1 w-7 glass-card rounded-full flex flex-col items-center justify-between py-2 text-[10px] font-bold select-none touch-none">
+            <!-- Letters generated dynamically -->
+          </div>
+
+          <!-- Floating Letter Indicator -->
+          <div id="niagara-letter-bubble" class="hidden pointer-events-none absolute right-11 top-1/2 -translate-y-1/2 w-12 h-12 rounded-2xl glass-strong flex items-center justify-center text-xl font-extrabold shadow-xl" style="color: var(--accent);">
+            A
+          </div>
+        </section>
+      </div>
+
+      <!-- Custom Glass Dock (Persistent at bottom of Nova Home) -->
+      <div id="nova-dock" class="custom-dock-bar rounded-3xl p-2.5 mt-1.5 flex items-center justify-around shrink-0">
+        <!-- Populated dynamically with custom dock count, size & color -->
+      </div>
+    </main>
+
+    <!-- ==================== TAB 2: HABITS ==================== -->
+    <main id="tab-habits" class="tab-view hidden flex-1 flex-col px-4 overflow-hidden">
+      <header class="pt-1 pb-3 shrink-0 flex items-center justify-between">
+        <div>
+          <h1 class="text-xl font-extrabold tracking-tight">Daily Habits</h1>
+          <p class="text-[11px] opacity-75">Build streaks &amp; track your 7-day consistency</p>
+        </div>
+        <span id="habits-summary-pill" class="glass-strong px-3 py-1 rounded-full text-xs font-extrabold" style="color: var(--accent);">0% Today</span>
+      </header>
+
+      <!-- Add Habit Form -->
+      <form onsubmit="handleAddHabit(event)" class="flex items-center gap-2 mb-3 shrink-0">
+        <input id="new-habit-input" type="text" placeholder="Add a new daily habit..."
+               class="flex-1 glass-card rounded-2xl px-4 py-2.5 text-sm outline-none placeholder-current" />
+        <button type="submit" class="px-4 py-2.5 rounded-2xl text-sm font-bold text-white shadow-md active:scale-95 transition-transform"
+                style="background: var(--accent);">
+          Add
+        </button>
+      </form>
+
+      <!-- Habits List -->
+      <div id="habits-list-container" class="flex-1 overflow-y-auto no-scrollbar space-y-3 pb-4">
+        <!-- Populated dynamically -->
+      </div>
+    </main>
+
+    <!-- ==================== TAB 3: ASSISTANT ==================== -->
+    <main id="tab-assistant" class="tab-view hidden flex-1 flex-col px-4 overflow-hidden">
+      <header class="pt-1 pb-2 shrink-0 flex items-center justify-between">
+        <div>
+          <h1 class="text-xl font-extrabold tracking-tight">Command Assistant</h1>
+          <p class="text-[11px] opacity-75">On-device launcher controls &amp; quick actions</p>
+        </div>
+        <button onclick="clearAssistantChat()" class="glass-card px-3 py-1.5 rounded-full text-[11px] font-bold opacity-80 hover:opacity-100">
+          Clear
+        </button>
+      </header>
+
+      <!-- Quick-Tap Command Chips -->
+      <div id="assistant-chips" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-2.5 shrink-0">
+        <!-- Populated dynamically -->
+      </div>
+
+      <!-- Chat History -->
+      <div id="assistant-messages" class="flex-1 overflow-y-auto no-scrollbar space-y-2.5 pb-2">
+        <!-- Populated dynamically -->
+      </div>
+
+      <!-- Command Input Form -->
+      <form onsubmit="handleAssistantSubmit(event)" class="flex items-center gap-2 pt-1.5 pb-1 shrink-0">
+        <input id="assistant-input" type="text" placeholder='Try "theme cyan", "done Hydrate", "surprise me"...'
+               class="flex-1 glass-card rounded-2xl px-4 py-2.5 text-sm outline-none placeholder-current" />
+        <button type="submit" class="w-11 h-11 rounded-2xl flex items-center justify-center text-white shadow-md active:scale-95 transition-transform shrink-0"
+                style="background: var(--accent);" aria-label="Send command">
+          <i data-lucide="send" class="w-4 h-4"></i>
+        </button>
+      </form>
+    </main>
+
+    <!-- ==================== TAB 4: 12-CATEGORY SETTINGS & STYLE ==================== -->
+    <main id="tab-style" class="tab-view hidden flex-1 flex-col px-4 overflow-hidden">
+      <header class="pt-1 pb-2.5 shrink-0 flex items-center justify-between">
+        <div>
+          <h1 class="text-xl font-extrabold tracking-tight">Launcher Settings</h1>
+          <p class="text-[11px] opacity-75">12-Category Smart Launcher Control Center</p>
+        </div>
+        <button onclick="openOnboardingModal()" class="glass-card px-3 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1" style="color: var(--accent);">
+          <i data-lucide="compass" class="w-3.5 h-3.5"></i>
+          <span>Tour</span>
+        </button>
+      </header>
+
+      <!-- 12 Settings Category Filter Pills -->
+      <div id="settings-category-pills" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-2.5 shrink-0">
+        <!-- Populated dynamically -->
+      </div>
+
+      <div id="settings-scroll-container" class="flex-1 overflow-y-auto no-scrollbar space-y-3.5 pb-4">
+
+        <!-- 1. HOME SCREEN -->
+        <section id="settings-sec-home" class="settings-section glass-card rounded-3xl p-4 space-y-3">
+          <div class="flex items-center gap-2 text-sm font-extrabold" style="color: var(--accent);">
+            <i data-lucide="home" class="w-4 h-4"></i>
+            <span>1. Home Screen &amp; Dock</span>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <input id="custom-username-input" type="text" placeholder="Your greeting name..."
+                   onchange="updateUserName(this.value)"
+                   class="flex-1 glass-strong rounded-2xl px-3 py-2 text-xs font-semibold outline-none" />
+            <button onclick="updateUserName(document.getElementById('custom-username-input').value)"
+                    class="px-3.5 py-2 rounded-2xl text-xs font-bold text-white" style="background: var(--accent);">
+              Save
+            </button>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold">Launcher Layout</span>
+            <div class="glass-strong rounded-2xl p-1 flex gap-1 text-xs font-bold">
+              <button id="style-layout-nova" onclick="setLauncherStyle('nova')" class="px-3 py-1 rounded-xl transition-all">Nova Grid</button>
+              <button id="style-layout-niagara" onclick="setLauncherStyle('niagara')" class="px-3 py-1 rounded-xl transition-all">Niagara List</button>
+            </div>
+          </div>
+
+          <!-- Clock Design Picker -->
+          <div>
+            <div class="text-xs font-bold mb-1.5">Clock Widget Design</div>
+            <div class="grid grid-cols-3 gap-1.5 text-[11px] font-bold">
+              <button onclick="setClockDesign('digital')" id="clk-opt-digital" class="glass-strong py-2 rounded-xl">Digital</button>
+              <button onclick="setClockDesign('editorial')" id="clk-opt-editorial" class="glass-strong py-2 rounded-xl">Editorial</button>
+              <button onclick="setClockDesign('stacked')" id="clk-opt-stacked" class="glass-strong py-2 rounded-xl">Stacked</button>
+            </div>
+          </div>
+
+          <!-- Home Widgets Toggles -->
+          <div class="grid grid-cols-2 gap-2">
+            <button id="toggle-widget-clock" onclick="toggleWidget('clock')" class="glass-strong p-2.5 rounded-2xl flex items-center justify-between text-xs font-bold">
+              <span>Analog Clock</span>
+              <span id="status-widget-clock" class="px-2 py-0.5 rounded-full text-[10px]">ON</span>
+            </button>
+            <button id="toggle-widget-calendar" onclick="toggleWidget('calendar')" class="glass-strong p-2.5 rounded-2xl flex items-center justify-between text-xs font-bold">
+              <span>Calendar</span>
+              <span id="status-widget-calendar" class="px-2 py-0.5 rounded-full text-[10px]">ON</span>
+            </button>
+            <button id="toggle-widget-weather" onclick="toggleWidget('weather')" class="glass-strong p-2.5 rounded-2xl flex items-center justify-between text-xs font-bold">
+              <span>Weather</span>
+              <span id="status-widget-weather" class="px-2 py-0.5 rounded-full text-[10px]">ON</span>
+            </button>
+            <button id="toggle-widget-battery" onclick="toggleWidget('battery')" class="glass-strong p-2.5 rounded-2xl flex items-center justify-between text-xs font-bold">
+              <span>Battery Info</span>
+              <span id="status-widget-battery" class="px-2 py-0.5 rounded-full text-[10px]">ON</span>
+            </button>
+          </div>
+
+          <!-- Custom Dock Controls -->
+          <div class="border-t border-white/15 pt-3 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold">Custom Glass Dock</span>
+              <button id="toggle-dock-visible" onclick="toggleWidget('dock')" class="glass-strong px-3 py-1 rounded-full text-[11px] font-bold">Visible</button>
+            </div>
+            <div>
+              <div class="flex justify-between text-xs font-semibold mb-1">
+                <span>Dock Icon Size</span>
+                <span id="val-dock-size">50px</span>
+              </div>
+              <input type="range" id="slider-dock-size" min="38" max="66" value="50" oninput="updateGeometry('dockSize', this.value)" />
+            </div>
+            <div>
+              <div class="flex justify-between text-xs font-semibold mb-1">
+                <span>Dock App Count</span>
+                <span id="val-dock-count">4</span>
+              </div>
+              <input type="range" id="slider-dock-count" min="2" max="5" value="4" oninput="updateGeometry('dockCount', this.value)" />
+            </div>
+            <div>
+              <div class="text-xs font-semibold mb-1.5">Dock Tint Color</div>
+              <div id="dock-color-grid" class="flex items-center gap-1.5 flex-wrap"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. APPLICATIONS -->
+        <section id="settings-sec-apps" class="settings-section glass-card rounded-3xl p-4 space-y-3">
+          <div class="flex items-center gap-2 text-sm font-extrabold" style="color: var(--accent);">
+            <i data-lucide="grid" class="w-4 h-4"></i>
+            <span>2. Applications &amp; Shortcuts</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="openShortcutModal()" class="glass-strong p-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-1.5">
+              <i data-lucide="plus-circle" class="w-4 h-4"></i>
+              <span>Add Shortcut</span>
+            </button>
+            <button onclick="clearAllNotificationBadges()" class="glass-strong p-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-1.5">
+              <i data-lucide="check-check" class="w-4 h-4"></i>
+              <span>Clear Badges</span>
+            </button>
+          </div>
+          <div id="hidden-apps-card" class="glass-strong rounded-2xl p-3">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-xs font-bold">Hidden Apps (<span id="hidden-apps-count">0</span>)</span>
+              <button onclick="unhideAllApps()" class="text-[11px] font-bold underline" style="color: var(--accent);">Unhide All</button>
+            </div>
+            <div id="hidden-apps-list" class="flex flex-wrap gap-1.5"></div>
+          </div>
+        </section>
+
+        <!-- 3. POPUP FOLDERS -->
+        <section id="settings-sec-folders" class="settings-section glass-card rounded-3xl p-4 space-y-3">
+          <div class="flex items-center gap-2 text-sm font-extrabold" style="color: var(--accent);">
+            <i data-lucide="folder-open" class="w-4 h-4"></i>
+            <span>3. Popup Folders</span>
+          </div>
+          <p class="text-xs opacity-75">Create floating popup folders to group apps cleanly on your Home screen.</p>
+          <form onsubmit="handleCreateFolder(event)" class="flex items-center gap-2">
+            <input id="new-folder-name" type="text" placeholder="Folder name (e.g. Finance)..."
+                   class="flex-1 glass-strong rounded-2xl px-3 py-2 text-xs outline-none" />
+            <button type="submit" class="px-3.5 py-2 rounded-2xl text-xs font-bold text-white" style="background: var(--accent);">Create</button>
+          </form>
+          <div id="settings-folders-list" class="space-y-2"></div>
+        </section>
+
+        <!-- 4. APPEARANCE (THEMES, WALLPAPERS, ACCENTS, MATERIAL YOU) -->
+        <section id="settings-sec-appearance" class="settings-section glass-card rounded-3xl p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2 text-sm font-extrabold" style="color: var(--accent);">
+              <i data-lucide="palette" class="w-4 h-4"></i>
+              <span>4. Appearance &amp; Themes</span>
+            </div>
+            <button id="style-theme-toggle" onclick="toggleThemeMode()" class="glass-strong px-3 py-1.5 rounded-2xl text-xs font-bold flex items-center gap-1.5 active:scale-95">
+              <i data-lucide="moon" class="w-3.5 h-3.5"></i>
+              <span id="style-theme-label">Dark</span>
+            </button>
+          </div>
+
+          <div id="themes-preset-grid" class="grid grid-cols-2 gap-2"></div>
+
+          <div class="flex items-center justify-between pt-1">
+            <div>
+              <div class="text-xs font-bold">Material You Dynamic Tint</div>
+              <div class="text-[11px] opacity-70">Auto-match accent color to wallpaper</div>
+            </div>
+            <button onclick="applyMaterialYouTint()" class="glass-strong px-3 py-1.5 rounded-xl text-xs font-bold" style="color: var(--accent);">Sync Tint</button>
+          </div>
+
+          <div>
+            <div class="text-xs font-bold mb-2">Accent Color</div>
+            <div id="accent-picker-grid" class="grid grid-cols-8 gap-2"></div>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-xs font-bold mb-1">
+              <span>Glass Blur Intensity</span>
+              <span id="val-blur">20px</span>
+            </div>
+            <input type="range" id="slider-blur" min="0" max="40" value="20" oninput="updateGeometry('blur', this.value)" />
+          </div>
+
+          <!-- Wallpapers -->
+          <div class="space-y-2.5 pt-2 border-t border-white/15">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold">Online &amp; Gradient Wallpapers</span>
+              <label class="glass-strong px-3 py-1 rounded-full text-xs font-semibold cursor-pointer flex items-center gap-1">
+                <i data-lucide="image-plus" class="w-3.5 h-3.5"></i>
+                <span>Upload</span>
+                <input type="file" id="wallpaper-upload" accept="image/*" class="hidden" onchange="handleWallpaperUpload(event)" />
+              </label>
+            </div>
+            <form onsubmit="applyCustomWallpaperUrl(event)" class="flex items-center gap-2">
+              <input id="online-wp-url-input" type="url" placeholder="Paste online image URL (https://...)"
+                     class="flex-1 glass-strong rounded-2xl px-3 py-2 text-xs outline-none" />
+              <button type="submit" class="px-3.5 py-2 rounded-2xl text-xs font-bold text-white" style="background: var(--accent);">Apply</button>
+            </form>
+            <div id="online-wallpapers-grid" class="grid grid-cols-3 gap-2"></div>
+            <div id="wallpaper-presets-grid" class="grid grid-cols-4 gap-2"></div>
+          </div>
+        </section>
+
+        <!-- 5. ICONS & FONTS -->
+        <section id="settings-sec-icons" class="settings-section glass-card rounded-3xl p-4 space-y-3">
+          <div class="flex items-center gap-2 text-sm font-extrabold" style="color: var(--accent);">
+            <i data-lucide="shapes" class="w-4 h-4"></i>
+            <span>5. Icons, Fonts &amp; Animations</span>
+          </div>
+
+          <div>
+            <div class="text-xs font-bold mb-1.5">Icon Pack Style</div>
+            <div class="grid grid-cols-3 gap-1.5 text-[11px] font-bold">
+              <button onclick="setIconPackStyle('vivid')" id="iconpack-vivid" class="glass-strong py-2 rounded-xl">Vivid</button>
+              <button onclick="setIconPackStyle('monochrome')" id="iconpack-monochrome" class="glass-strong py-2 rounded-xl">Monochrome</button>
+              <button onclick="setIconPackStyle('glass')" id="iconpack-glass" class="glass-strong py-2 rounded-xl">Neon Glass</button>
+            </div>
+          </div>
+
+          <div>
+            <div class="text-xs font-bold mb-1.5">Typography Style</div>
+            <div class="grid grid-cols-4 gap-1.5 text-[11px] font-bold">
+              <button onclick="setFontStyle('sans')" id="font-opt-sans" class="glass-strong py-2 rounded-xl">Sans</button>
+              <button onclick="setFontStyle('jakarta')" id="font-opt-jakarta" class="glass-strong py-2 rounded-xl">Rounded</button>
+              <button onclick="setFontStyle('serif')" id="font-opt-serif" class="glass-strong py-2 rounded-xl">Editorial</button>
+              <button onclick="setFontStyle('mono')" id="font-opt-mono" class="glass-strong py-2 rounded-xl">Mono</button>
+            </div>
+          </div>
+
+          <div>
+            <div class="text-xs font-bold mb-1.5">Animation Style</div>
+            <div class="grid grid-cols-3 gap-1.5 text-[11px] font-bold">
+              <button onclick="setAnimationStyle('spring')" id="anim-opt-spring" class="glass-strong py-2 rounded-xl">Spring</button>
+              <button onclick="setAnimationStyle('smooth')" id="anim-opt-smooth" class="glass-strong py-2 rounded-xl">Smooth</button>
+              <button onclick="setAnimationStyle('snappy')" id="anim-opt-snappy" class="glass-strong py-2 rounded-xl">Snappy</button>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-xs font-bold mb-1">
+              <span>Icon Size</span>
+              <span id="val-icon-size">56px</span>
+            </div>
+            <input type="range" id="slider-icon-size" min="42" max="72" value="56" oninput="updateGeometry('iconSize', this.value)" />
+          </div>
+
+          <div>
+            <div class="flex justify-between text-xs font-bold mb-1">
+              <span>Corner Shape (Radius)</span>
+              <span id="val-radius">18px</span>
+            </div>
+            <input type="range" id="slider-radius" min="6" max="36" value="18" oninput="updateGeometry('iconRadius', this.value)" />
+          </div>
+
+          <div>
+            <div class="flex justify-between text-xs font-bold mb-1">
+              <span>Row Spacing</span>
+              <span id="val-icon-gap">14px</span>
+            </div>
+            <input type="range" id="slider-icon-gap" min="8" max="28" value="14" oninput="updateGeometry('iconGap', this.value)" />
+          </div>
+
+          <div>
+            <div class="flex justify-between text-xs font-bold mb-1">
+              <span>Grid Columns (Nova)</span>
+              <span id="val-cols">4</span>
+            </div>
+            <input type="range" id="slider-cols" min="3" max="5" value="4" oninput="updateGeometry('gridCols', this.value)" />
+          </div>
+        </section>
+
+        <!-- 6. GESTURES -->
+        <section id="settings-sec-gestures" class="settings-section glass-card rounded-3xl p-4 space-y-3">
+          <div class="flex items-center gap-2 text-sm font-extrabold" style="color: var(--accent);">
+            <i data-lucide="hand" class="w-4 h-4"></i>
+            <span>6. Gesture Controls</span>
+          </div>
+          <div class="space-y-2 text-xs">
+            <div class="flex items-center justify-between glass-strong p-2.5 rounded-2xl">
+              <span class="font-bold">Swipe Up</span>
+              <select id="gesture-swipeUp" onchange="updateGesture('swipeUp', this.value)" class="bg-transparent font-bold outline-none">
+                <option value="drawer" class="text-black">Open App Drawer</option>
+                <option value="search" class="text-black">Smart Search</option>
+                <option value="assistant" class="text-black">Open Assistant</option>
+                <option value="lock" class="text-black">Lock Screen</option>
+              </select>
+            </div>
+            <div class="flex items-center justify-between glass-strong p-2.5 rounded-2xl">
+              <span class="font-bold">Swipe Down</span>
+              <select id="gesture-swipeDown" onchange="updateGesture('swipeDown', this.value)" class="bg-transparent font-bold outline-none">
+                <option value="notifications" class="text-black">Notifications</option>
+                <option value="search" class="text-black">Smart Search</option>
+                <option value="lock" class="text-black">Lock Screen</option>
+                <option value="theme" class="text-black">Toggle Dark/Light</option>
+              </select>
+            </div>
+            <div class="flex items-center justify-between glass-strong p-2.5 rounded-2xl">
+              <span class="font-bold">Double Tap Home</span>
+              <select id="gesture-doubleTap" onchange="updateGesture('doubleTap', this.value)" class="bg-transparent font-bold outline-none">
+                <option value="lock" class="text-black">Lock Screen (AOD)</option>
+                <option value="theme" class="text-black">Toggle Dark/Light</option>
+                <option value="torch" class="text-black">Screen Torch</option>
+                <option value="drawer" class="text-black">Open App Drawer</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <!-- 7. CALENDAR -->
+        <section id="settings-sec-calendar" class="settings-section glass-card rounded-3xl p-4 space-y-3">
+          <div class="flex items-center gap-2 text-sm font-extrabold" style="color: var(--accent);">
+            <i data-lucide="calendar" class="w-4 h-4"></i>
+            <span>7. Calendar &amp; Reminders</span>
+          </div>
+          <form onsubmit="handleAddCalendarEvent(event)" class="flex items-center gap-2">
+            <input id="new-event-time" type="time" value="14:00" class="glass-strong rounded-2xl px-2.5 py-2 text-xs font-bold outline-none" />
+            <input id="new-event-title" type="text" placeholder="Add event or reminder..."
+                   class="flex-1 glass-strong rounded-2xl px-3 py-2 text-xs outline-none" />
+            <button type="submit" class="px-3.5 py-2 rounded-2xl text-xs font-bold text-white" style="background: var(--accent);">Add</button>
+          </form>
+          <div id="settings-events-list" class="space-y-1.5"></div>
+        </section>
+
+        <!-- 8. WEATHER -->
+        <section id="settings-sec-weather" class="settings-section glass-card rounded-3xl p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2 text-sm font-extrabold" style="color: var(--accent);">
+              <i data-lucide="cloud-sun" class="w-4 h-4"></i>
+              <span>8. Live Weather (Open-Meteo)</span>
+            </div>
+            <button onclick="toggleTempUnit()" id="btn-temp-unit" class="glass-strong px-3 py-1 rounded-full text-xs font-bold">°C</button>
+          </div>
+          <div class="grid grid-cols-3 gap-1.5 text-xs font-bold">
+            <button onclick="selectWeatherCity('Bengaluru', 12.97, 77.59)" class="glass-strong py-2 rounded-xl">Bengaluru</button>
+            <button onclick="selectWeatherCity('Mumbai', 19.07, 72.87)" class="glass-strong py-2 rounded-xl">Mumbai</button>
+            <button onclick="selectWeatherCity('New Delhi', 28.61, 77.20)" class="glass-strong py-2 rounded-xl">Delhi</button>
+            <button onclick="selectWeatherCity('London', 51.50, -0.12)" class="glass-strong py-2 rounded-xl">London</button>
+            <button onclick="selectWeatherCity('Tokyo', 35.67, 139.65)" class="glass-strong py-2 rounded-xl">Tokyo</button>
+            <button onclick="selectWeatherCity('New York', 40.71, -74.00)" class="glass-strong py-2 rounded-xl">New York</button>
+          </div>
+        </section>
+
+        <!-- 9. PRODUCTIVITY (USAGE BREAKER & NOTIFICATIONS) -->
+        <section id="settings-sec-productivity" class="settings-section glass-card rounded-3xl p-4 space-y-3">
+          <div class="flex items-center gap-2 text-sm font-extrabold" style="color: var(--accent);">
+            <i data-lucide="hourglass" class="w-4 h-4"></i>
+            <span>9. Productivity &amp; Usage Breaker</span>
+          </div>
+          <p class="text-xs opacity-75">Set daily screen time limits. Exceeding a limit triggers a mindful pause prompt.</p>
+          <div id="usage-breaker-list" class="space-y-2"></div>
+        </section>
+
+        <!-- 10. PRIVACY -->
+        <section id="settings-sec-privacy" class="settings-section glass-card rounded-3xl p-4 space-y-3">
+          <div class="flex items-center gap-2 text-sm font-extrabold" style="color: var(--accent);">
+            <i data-lucide="shield-check" class="w-4 h-4"></i>
+            <span>10. Privacy &amp; Vault Security</span>
+          </div>
+          <div class="flex items-center justify-between glass-strong p-3 rounded-2xl">
+            <div>
+              <div class="text-xs font-bold">App Vault PIN Protection</div>
+              <div class="text-[11px] opacity-70">Require PIN (1234) to unhide hidden apps</div>
+            </div>
+            <button id="toggle-vault-pin" onclick="toggleVaultPin()" class="px-3 py-1 rounded-full text-xs font-bold text-white" style="background: var(--accent);">Enabled</button>
+          </div>
+          <div class="text-[11px] opacity-75 space-y-1 px-1">
+            <div>• Zero ads, zero trackers, 100% local storage</div>
+            <div>• Battery &amp; Weather APIs run only on demand</div>
+          </div>
+        </section>
+
+        <!-- 11. BACKUP & RESTORE -->
+        <section id="settings-sec-backup" class="settings-section glass-card rounded-3xl p-4 space-y-3">
+          <div class="flex items-center gap-2 text-sm font-extrabold" style="color: var(--accent);">
+            <i data-lucide="database-backup" class="w-4 h-4"></i>
+            <span>11. Backup &amp; Restore</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="exportLauncherBackup()" class="glass-strong p-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-1.5">
+              <i data-lucide="download" class="w-4 h-4"></i>
+              <span>Export JSON</span>
+            </button>
+            <label class="glass-strong p-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer">
+              <i data-lucide="upload" class="w-4 h-4"></i>
+              <span>Import JSON</span>
+              <input type="file" accept=".json,application/json" class="hidden" onchange="importLauncherBackup(event)" />
+            </label>
+          </div>
+          <button onclick="resetLauncherDefaults()" class="w-full py-2.5 rounded-2xl text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+            Factory Reset Launcher
+          </button>
+        </section>
+
+        <!-- 12. ABOUT APPLICATION -->
+        <section id="settings-sec-about" class="settings-section glass-card rounded-3xl p-4 space-y-2.5">
+          <div class="flex items-center gap-2 text-sm font-extrabold" style="color: var(--accent);">
+            <i data-lucide="info" class="w-4 h-4"></i>
+            <span>12. About My Phone Launcher</span>
+          </div>
+          <div class="text-xs font-bold">My Phone Pro — Smart Minimalist Launcher v2.5</div>
+          <p class="text-[11px] opacity-75 leading-relaxed">
+            Engineered with 60–120 FPS glassmorphism UI, Niagara &amp; Nova dual-engine layouts, live Open-Meteo weather, Usage Breaker wellbeing, AOD Lock Screen, and full JSON backup.
+          </p>
+          <button onclick="openOnboardingModal()" class="w-full glass-strong py-2.5 rounded-2xl text-xs font-bold" style="color: var(--accent);">
+            Replay Welcome Onboarding Tour
+          </button>
+        </section>
+      </div>
+    </main>
+
+    <!-- ==================== BOTTOM GLASS NAVIGATION ==================== -->
+    <nav class="px-4 pt-1.5 shrink-0">
+      <div class="glass-strong rounded-3xl p-1.5 flex items-center justify-around">
+        <button onclick="switchTab('home')" data-tab="home" class="nav-btn flex-1 py-2 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all">
+          <i data-lucide="home" class="w-5 h-5"></i>
+          <span class="text-[11px] font-semibold">Home</span>
+        </button>
+        <button onclick="switchTab('habits')" data-tab="habits" class="nav-btn flex-1 py-2 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all">
+          <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+          <span class="text-[11px] font-semibold">Habits</span>
+        </button>
+        <button onclick="switchTab('assistant')" data-tab="assistant" class="nav-btn flex-1 py-2 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all">
+          <i data-lucide="sparkles" class="w-5 h-5"></i>
+          <span class="text-[11px] font-semibold">Assistant</span>
+        </button>
+        <button onclick="switchTab('style')" data-tab="style" class="nav-btn flex-1 py-2 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all">
+          <i data-lucide="sliders-horizontal" class="w-5 h-5"></i>
+          <span class="text-[11px] font-semibold">Settings</span>
+        </button>
+      </div>
+    </nav>
+  </div>
+
+  <!-- ==================== SWIPE-UP SMART SEARCH & APP DRAWER ==================== -->
+  <div id="app-drawer" class="fixed inset-0 z-40 glass-strong flex flex-col max-w-lg mx-auto"
+       style="padding-top: max(16px, env(safe-area-inset-top)); padding-bottom: max(16px, env(safe-area-inset-bottom));">
+    <!-- Drag Handle & Header -->
+    <div id="drawer-drag-zone" class="px-5 pt-1 pb-2.5 flex flex-col items-center shrink-0 cursor-grab">
+      <div class="w-12 h-1.5 rounded-full bg-current opacity-30 mb-2.5"></div>
+      <div class="w-full flex items-center justify-between">
+        <h2 class="text-xl font-extrabold">Smart Search &amp; Apps</h2>
+        <button onclick="closeDrawer()" class="glass-card w-8 h-8 rounded-full flex items-center justify-center active:scale-90" aria-label="Close App Drawer">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Universal Smart Search Bar -->
+    <div class="px-5 pb-3 shrink-0">
+      <div class="glass-card rounded-2xl px-3.5 py-2.5 flex items-center gap-2.5">
+        <i data-lucide="search" class="w-4 h-4 opacity-70"></i>
+        <input id="drawer-search-input" type="text" placeholder="Search apps, contacts, events or web..."
+               oninput="renderAppDrawer()"
+               class="flex-1 bg-transparent text-sm outline-none placeholder-current" />
+        <button id="drawer-search-clear" onclick="clearDrawerSearch()" class="hidden opacity-60 hover:opacity-100">
+          <i data-lucide="x-circle" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- App Grid + Recent Apps + Contacts + Web Search Fallback -->
+    <div id="drawer-content" class="flex-1 overflow-y-auto no-scrollbar px-5 pb-6 space-y-4">
+      <!-- Recently Used Apps Strip -->
+      <div id="drawer-recent-section">
+        <div class="text-[11px] font-extrabold uppercase tracking-wider opacity-65 mb-2">Recently Used</div>
+        <div id="drawer-recent-row" class="flex items-center gap-3 overflow-x-auto no-scrollbar"></div>
+      </div>
+
+      <!-- Favourite Contacts Strip -->
+      <div id="drawer-contacts-section">
+        <div class="text-[11px] font-extrabold uppercase tracking-wider opacity-65 mb-2">Favourite Contacts</div>
+        <div id="drawer-contacts-row" class="grid grid-cols-3 gap-2"></div>
+      </div>
+
+      <!-- Matching Calendar Events (when searching) -->
+      <div id="drawer-events-results" class="hidden space-y-1.5"></div>
+
+      <!-- All Apps Grid -->
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[11px] font-extrabold uppercase tracking-wider opacity-65">Applications</span>
+          <span class="text-[10px] opacity-60">Long-press to Pin / Hide</span>
+        </div>
+        <div id="drawer-apps-grid" class="grid grid-cols-4 gap-y-4 gap-x-3"></div>
+      </div>
+
+      <div id="drawer-web-fallback" class="hidden"></div>
+    </div>
+  </div>
+
+  <!-- ==================== FLOATING POPUP FOLDER MODAL ==================== -->
+  <div id="popup-folder-modal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-5" onclick="closePopupFolder(event)">
+    <div class="glass-strong w-full max-w-sm rounded-3xl p-5 space-y-4 animate-pop" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i data-lucide="folder-open" class="w-5 h-5" style="color: var(--accent);"></i>
+          <h3 id="popup-folder-title" class="text-lg font-extrabold">Folder</h3>
+        </div>
+        <button onclick="closePopupFolder()" class="glass-card w-8 h-8 rounded-full flex items-center justify-center">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div id="popup-folder-apps-grid" class="grid grid-cols-3 gap-4 py-2"></div>
+    </div>
+  </div>
+
+  <!-- ==================== NOTIFICATION CENTER MODAL ==================== -->
+  <div id="notifications-modal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end justify-center p-4" onclick="closeNotificationSheet(event)">
+    <div class="glass-strong w-full max-w-md rounded-3xl p-5 space-y-3 animate-pop max-h-[75vh] flex flex-col" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between shrink-0">
+        <h3 class="text-lg font-extrabold">Notifications</h3>
+        <div class="flex items-center gap-2">
+          <button onclick="clearAllNotificationBadges()" class="text-xs font-bold underline" style="color: var(--accent);">Clear All</button>
+          <button onclick="closeNotificationSheet()" class="glass-card w-8 h-8 rounded-full flex items-center justify-center">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+      <div id="notifications-list" class="flex-1 overflow-y-auto no-scrollbar space-y-2"></div>
+    </div>
+  </div>
+
+  <!-- ==================== USAGE BREAKER MINDFUL PAUSE MODAL ==================== -->
+  <div id="usage-breaker-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-5">
+    <div class="glass-strong w-full max-w-sm rounded-3xl p-6 text-center space-y-4 animate-pop">
+      <div class="w-14 h-14 rounded-3xl mx-auto flex items-center justify-center text-white shadow-lg" style="background: var(--accent);">
+        <i data-lucide="hourglass" class="w-7 h-7"></i>
+      </div>
+      <h3 class="text-xl font-extrabold">Usage Breaker Alert</h3>
+      <p id="usage-breaker-msg" class="text-xs opacity-85 leading-relaxed">
+        You have reached your daily screen-time limit for this app. Take a deep breath before continuing.
+      </p>
+      <div class="flex gap-2 pt-2">
+        <button onclick="closeUsageBreakerModal()" class="flex-1 py-3 rounded-2xl text-xs font-bold text-white" style="background: var(--accent);">
+          Stay Mindful (Close)
+        </button>
+        <a id="usage-breaker-proceed-link" href="#" target="_blank" rel="noopener noreferrer" onclick="closeUsageBreakerModal()"
+           class="flex-1 glass-card py-3 rounded-2xl text-xs font-bold flex items-center justify-center">
+          Open Anyway
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SCREEN TORCH OVERLAY ==================== -->
+  <div id="screen-torch-overlay" class="hidden fixed inset-0 z-50 flex flex-col items-center justify-between p-8">
+    <div class="text-xs font-extrabold uppercase tracking-widest opacity-60">Screen Torch Active</div>
+    <div class="w-20 h-20 rounded-full bg-amber-400/20 flex items-center justify-center">
+      <i data-lucide="sun" class="w-10 h-10 text-amber-500"></i>
+    </div>
+    <button onclick="toggleScreenTorch(false)" class="px-8 py-4 rounded-full bg-slate-900 text-white text-sm font-extrabold shadow-2xl active:scale-95">
+      Turn Off Torch
+    </button>
+  </div>
+
+  <!-- ==================== ALWAYS-ON DISPLAY (AOD) LOCK SCREEN ==================== -->
+  <div id="aod-lock-screen" class="hidden fixed inset-0 z-50 text-white flex flex-col items-center justify-between py-14 px-6 select-none">
+    <div class="text-center space-y-1 mt-6">
+      <div class="text-xs font-bold uppercase tracking-widest opacity-60 flex items-center justify-center gap-1.5">
+        <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+        <span>Always-On Display</span>
+      </div>
+      <div id="aod-clock-time" class="text-6xl font-extralight tracking-tight pt-2">09:41</div>
+      <div id="aod-clock-date" class="text-sm opacity-75">Thursday, Nov 19</div>
+      <div id="aod-weather-line" class="text-xs opacity-65 pt-2">☀️ 26°C • Bengaluru • 🔋 88%</div>
+    </div>
+
+    <div class="flex flex-col items-center gap-3">
+      <button onclick="unlockDeviceScreen()" class="w-16 h-16 rounded-full border border-white/30 bg-white/10 flex items-center justify-center active:scale-90 transition-transform">
+        <i data-lucide="fingerprint" class="w-8 h-8" style="color: var(--accent);"></i>
+      </button>
+      <span class="text-xs opacity-60 font-medium">Tap fingerprint sensor to unlock</span>
+    </div>
+  </div>
+
+  <!-- ==================== INTERACTIVE ONBOARDING MODAL ==================== -->
+  <div id="onboarding-modal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-5">
+    <div class="glass-strong w-full max-w-sm rounded-3xl p-6 space-y-4 animate-pop">
+      <div class="flex items-center justify-between">
+        <span class="text-[11px] font-extrabold uppercase tracking-wider" style="color: var(--accent);">Welcome to My Phone Pro</span>
+        <button onclick="closeOnboardingModal()" class="text-xs opacity-70 font-bold">Skip</button>
+      </div>
+      <div id="onboarding-step-content" class="space-y-2 py-2"></div>
+      <div class="flex items-center justify-between pt-2">
+        <div id="onboarding-dots" class="flex gap-1.5"></div>
+        <button onclick="nextOnboardingStep()" id="onboarding-next-btn" class="px-5 py-2.5 rounded-2xl text-xs font-extrabold text-white" style="background: var(--accent);">
+          Next
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== LONG-PRESS APP CONTEXT SHEET ==================== -->
+  <div id="app-action-modal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end justify-center p-4" onclick="closeAppActionModal(event)">
+    <div class="glass-strong w-full max-w-md rounded-3xl p-5 space-y-3 animate-pop" onclick="event.stopPropagation()">
+      <div class="flex items-center gap-3 pb-2 border-b border-white/15">
+        <div id="modal-app-icon" class="w-12 h-12 rounded-2xl flex items-center justify-center text-white"></div>
+        <div>
+          <div id="modal-app-name" class="text-base font-extrabold">App Name</div>
+          <div id="modal-app-url" class="text-xs opacity-70 truncate max-w-[230px]">https://...</div>
+        </div>
+      </div>
+
+      <button id="btn-modal-pin" onclick="togglePinSelectedApp()" class="w-full glass-card py-3 px-4 rounded-2xl text-sm font-semibold flex items-center gap-3 active:scale-98">
+        <i data-lucide="pin" class="w-4 h-4" style="color: var(--accent);"></i>
+        <span id="modal-pin-text">Pin to Home</span>
+      </button>
+
+      <button onclick="hideSelectedApp()" class="w-full glass-card py-3 px-4 rounded-2xl text-sm font-semibold flex items-center gap-3 text-rose-400 active:scale-98">
+        <i data-lucide="eye-off" class="w-4 h-4"></i>
+        <span>Hide App</span>
+      </button>
+
+      <button onclick="closeAppActionModal()" class="w-full py-2.5 text-xs font-bold opacity-75">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ==================== ADD / EDIT SHORTCUT MODAL ==================== -->
+  <div id="shortcut-modal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4" onclick="closeShortcutModal(event)">
+    <div class="glass-strong w-full max-w-md rounded-3xl p-5 space-y-4 animate-pop" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between">
+        <h3 id="shortcut-modal-title" class="text-lg font-extrabold">Add Shortcut</h3>
+        <button onclick="closeShortcutModal()" class="glass-card w-8 h-8 rounded-full flex items-center justify-center">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <form onsubmit="saveShortcutForm(event)" class="space-y-3">
+        <input type="hidden" id="shortcut-edit-id" />
+        <div>
+          <label class="text-xs font-bold opacity-80 block mb-1">Name</label>
+          <input id="shortcut-name-input" type="text" required placeholder="e.g. GitHub"
+                 class="w-full glass-card rounded-2xl px-3.5 py-2.5 text-sm outline-none" />
+        </div>
+        <div>
+          <label class="text-xs font-bold opacity-80 block mb-1">URL</label>
+          <input id="shortcut-url-input" type="text" required placeholder="e.g. github.com"
+                 class="w-full glass-card rounded-2xl px-3.5 py-2.5 text-sm outline-none" />
+        </div>
+        <div>
+          <label class="text-xs font-bold opacity-80 block mb-1">Badge Color</label>
+          <div id="shortcut-color-options" class="flex gap-2 flex-wrap pt-1"></div>
+        </div>
+
+        <div class="flex items-center gap-2 pt-2">
+          <button type="button" id="btn-delete-shortcut" onclick="deleteCurrentShortcut()"
+                  class="hidden px-4 py-2.5 rounded-2xl text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+            Remove
+          </button>
+          <button type="submit" class="flex-1 py-2.5 rounded-2xl text-sm font-bold text-white shadow-lg active:scale-95 transition-transform"
+                  style="background-color: var(--accent);">
+            Save Shortcut
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== TOAST NOTIFICATION ==================== -->
+  <div id="toast-banner" class="pointer-events-none fixed top-6 left-1/2 -translate-x-1/2 z-50 opacity-0 transition-all duration-300 translate-y-[-10px]">
+    <div class="glass-strong px-4 py-2 rounded-full text-xs font-bold shadow-xl flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full" style="background: var(--accent);"></span>
+      <span id="toast-text">Notification</span>
+    </div>
+  </div>
+
+  <script>
+    /* ==========================================================================
+       1. CONSTANTS & DEFAULT DATA
+       ========================================================================== */
+    const STORAGE_KEY = 'my_phone_launcher_v2';
+
+    const ACCENT_COLORS = [
+      { name: 'pink', hex: '#ec4899' },
+      { name: 'blue', hex: '#3b82f6' },
+      { name: 'cyan', hex: '#06b6d4' },
+      { name: 'emerald', hex: '#10b981' },
+      { name: 'purple', hex: '#a855f7' },
+      { name: 'amber', hex: '#f59e0b' },
+      { name: 'rose', hex: '#f43f5e' },
+      { name: 'indigo', hex: '#6366f1' }
+    ];
+
+    const WALLPAPERS = [
+      { id: 'aurora', name: 'Aurora', css: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 45%, #311042 75%, #064e3b 100%)' },
+      { id: 'sunset', name: 'Sunset', css: 'linear-gradient(135deg, #2e1065 0%, #9d174d 45%, #ea580c 85%, #f59e0b 100%)' },
+      { id: 'ocean', name: 'Ocean', css: 'linear-gradient(135deg, #042f2e 0%, #0f766e 45%, #0284c7 85%, #1d4ed8 100%)' },
+      { id: 'midnight', name: 'Midnight', css: 'linear-gradient(135deg, #09090b 0%, #18181b 50%, #27272a 100%)' },
+      { id: 'lavender', name: 'Lavender', css: 'linear-gradient(135deg, #3b0764 0%, #6d28d9 50%, #ec4899 100%)' },
+      { id: 'forest', name: 'Forest', css: 'linear-gradient(135deg, #052e16 0%, #14532d 50%, #0d9488 100%)' },
+      { id: 'peach', name: 'Peach', css: 'linear-gradient(135deg, #fb7185 0%, #f43f5e 45%, #fb923c 100%)' },
+      { id: 'cyber', name: 'Cyber', css: 'linear-gradient(135deg, #090d16 0%, #1e1b4b 45%, #06b6d4 100%)' }
+    ];
+
+    const ONLINE_WALLPAPERS = [
+      { id: 'online-mountains', name: 'Alpine Dusk', url: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1080&q=80' },
+      { id: 'online-nebula', name: 'Cosmic Nebula', url: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=1080&q=80' },
+      { id: 'online-tokyo', name: 'Neon City', url: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1080&q=80' },
+      { id: 'online-ocean', name: 'Azure Waves', url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1080&q=80' },
+      { id: 'online-forest', name: 'Misty Pines', url: 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1080&q=80' },
+      { id: 'online-desert', name: 'Golden Dunes', url: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?auto=format&fit=crop&w=1080&q=80' }
+    ];
+
+    const FULL_THEMES = [
+      {
+        id: 'cyber-neon',
+        name: 'Cyber Neon',
+        desc: 'Tokyo Night + Cyan',
+        theme: 'dark',
+        accent: '#06b6d4',
+        wallpaperId: 'online-tokyo',
+        blur: 22,
+        iconRadius: 16,
+        dockColor: 'rgba(6, 182, 212, 0.24)'
+      },
+      {
+        id: 'sakura-glass',
+        name: 'Sakura Frost',
+        desc: 'Light Glass + Rose',
+        theme: 'light',
+        accent: '#ec4899',
+        wallpaperId: 'peach',
+        blur: 26,
+        iconRadius: 24,
+        dockColor: 'rgba(255, 255, 255, 0.68)'
+      },
+      {
+        id: 'alpine-zen',
+        name: 'Alpine Zen',
+        desc: 'Misty Pines + Emerald',
+        theme: 'dark',
+        accent: '#10b981',
+        wallpaperId: 'online-forest',
+        blur: 18,
+        iconRadius: 18,
+        dockColor: 'rgba(16, 185, 129, 0.22)'
+      },
+      {
+        id: 'solar-dunes',
+        name: 'Solar Dunes',
+        desc: 'Desert Gold + Amber',
+        theme: 'dark',
+        accent: '#f59e0b',
+        wallpaperId: 'online-desert',
+        blur: 20,
+        iconRadius: 14,
+        dockColor: 'rgba(245, 158, 11, 0.24)'
+      }
+    ];
+
+    const DOCK_TINTS = [
+      { name: 'Glass Default', value: '' },
+      { name: 'Obsidian', value: 'rgba(9, 9, 11, 0.65)' },
+      { name: 'Frost White', value: 'rgba(255, 255, 255, 0.45)' },
+      { name: 'Pink Glow', value: 'rgba(236, 72, 153, 0.28)' },
+      { name: 'Ocean Blue', value: 'rgba(59, 130, 246, 0.28)' },
+      { name: 'Emerald', value: 'rgba(16, 185, 129, 0.28)' },
+      { name: 'Purple Haze', value: 'rgba(168, 85, 247, 0.28)' }
+    ];
+
+    const DEFAULT_SHORTCUTS = [
+      { id: 'sc-mail', name: 'Mail', url: 'https://mail.google.com', icon: 'mail', color: '#ef4444' },
+      { id: 'sc-maps', name: 'Maps', url: 'https://maps.google.com', icon: 'map-pin', color: '#10b981' },
+      { id: 'sc-youtube', name: 'YouTube', url: 'https://youtube.com', icon: 'play-circle', color: '#dc2626' },
+      { id: 'sc-music', name: 'Music', url: 'https://music.youtube.com', icon: 'music', color: '#ec4899' },
+      { id: 'sc-notes', name: 'Notes', url: 'https://keep.google.com', icon: 'file-text', color: '#f59e0b' },
+      { id: 'sc-photos', name: 'Photos', url: 'https://photos.google.com', icon: 'image', color: '#3b82f6' },
+      { id: 'sc-search', name: 'Search', url: 'https://www.google.com', icon: 'search', color: '#06b6d4' },
+      { id: 'sc-claude', name: 'Claude', url: 'https://claude.ai', icon: 'bot', color: '#d97706' }
+    ];
+
+    const ALL_APPS_CATALOG = [
+      ...DEFAULT_SHORTCUTS,
+      { id: 'app-calendar', name: 'Calendar', url: 'https://calendar.google.com', icon: 'calendar', color: '#2563eb' },
+      { id: 'app-drive', name: 'Drive', url: 'https://drive.google.com', icon: 'hard-drive', color: '#059669' },
+      { id: 'app-github', name: 'GitHub', url: 'https://github.com', icon: 'github', color: '#334155' },
+      { id: 'app-whatsapp', name: 'WhatsApp', url: 'https://web.whatsapp.com', icon: 'message-circle', color: '#16a34a' },
+      { id: 'app-spotify', name: 'Spotify', url: 'https://open.spotify.com', icon: 'headphones', color: '#15803d' },
+      { id: 'app-x', name: 'X', url: 'https://x.com', icon: 'at-sign', color: '#18181b' },
+      { id: 'app-reddit', name: 'Reddit', url: 'https://reddit.com', icon: 'flame', color: '#ea580c' },
+      { id: 'app-notion', name: 'Notion', url: 'https://notion.so', icon: 'book-open', color: '#475569' },
+      { id: 'app-weather', name: 'Weather', url: 'https://www.google.com/search?q=weather', icon: 'cloud-sun', color: '#0284c7' },
+      { id: 'app-news', name: 'News', url: 'https://news.google.com', icon: 'newspaper', color: '#4f46e5' },
+      { id: 'app-translate', name: 'Translate', url: 'https://translate.google.com', icon: 'languages', color: '#0ea5e9' },
+      { id: 'app-calculator', name: 'Calculator', url: 'https://www.google.com/search?q=calculator', icon: 'calculator', color: '#64748b' }
+    ];
+
+    const QUICK_CHIPS = [
+      'add habit Hydrate',
+      'done Hydrate',
+      'theme pink',
+      'wallpaper sunset',
+      'blur 30',
+      'dark mode',
+      'add shortcut GitHub github.com',
+      'open Maps',
+      'layout niagara',
+      'lock screen',
+      'progress',
+      'surprise me'
+    ];
+
+    const FAVOURITE_CONTACTS = [
+      { id: 'ct-1', name: 'Aarav', role: 'Brother', phone: '+919876543210', color: '#3b82f6' },
+      { id: 'ct-2', name: 'Priya', role: 'Design Lead', phone: '+919811122233', color: '#ec4899' },
+      { id: 'ct-3', name: 'Mom', role: 'Family', phone: '+919800011122', color: '#10b981' }
+    ];
+
+    const SETTINGS_CATEGORIES = [
+      { id: 'all', label: 'All (12)' },
+      { id: 'home', label: '1. Home' },
+      { id: 'apps', label: '2. Apps' },
+      { id: 'folders', label: '3. Folders' },
+      { id: 'appearance', label: '4. Appearance' },
+      { id: 'icons', label: '5. Icons & Fonts' },
+      { id: 'gestures', label: '6. Gestures' },
+      { id: 'calendar', label: '7. Calendar' },
+      { id: 'weather', label: '8. Weather' },
+      { id: 'productivity', label: '9. Productivity' },
+      { id: 'privacy', label: '10. Privacy' },
+      { id: 'backup', label: '11. Backup' },
+      { id: 'about', label: '12. About' }
+    ];
+
+    /* ==========================================================================
+       2. STATE MANAGEMENT & LOCALSTORAGE
+       ========================================================================== */
+    function getTodayISO() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const d = String(now.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function getPastDateISO(daysAgo) {
+      const d = new Date();
+      d.setDate(d.getDate() - daysAgo);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    const defaultState = {
+      userName: 'Yashu',
+      onboardingDone: false,
+      theme: 'dark', // 'dark' | 'light'
+      accent: '#ec4899',
+      wallpaperId: 'aurora',
+      customWallpaper: null,
+      blur: 20,
+      iconSize: 56,
+      iconRadius: 18,
+      iconGap: 14,
+      gridCols: 4,
+      dockSize: 50,
+      dockCount: 4,
+      dockColor: '',
+      clockDesign: 'digital', // 'digital' | 'editorial' | 'stacked'
+      iconPackStyle: 'vivid', // 'vivid' | 'monochrome' | 'glass'
+      fontStyle: 'sans', // 'sans' | 'jakarta' | 'serif' | 'mono'
+      animationStyle: 'spring', // 'spring' | 'smooth' | 'snappy'
+      vaultPinEnabled: true,
+      widgets: {
+        clock: true,
+        calendar: true,
+        weather: true,
+        battery: true,
+        dock: true
+      },
+      quickSettings: {
+        wifi: true,
+        bt: true,
+        dnd: false
+      },
+      gestures: {
+        swipeUp: 'drawer',
+        swipeDown: 'notifications',
+        doubleTap: 'lock'
+      },
+      weather: {
+        city: 'Bengaluru',
+        lat: 12.97,
+        lon: 77.59,
+        unit: 'C',
+        tempC: 26,
+        highC: 29,
+        lowC: 18,
+        condition: 'Clear Sky'
+      },
+      calendarEvents: [
+        { id: 'ev-1', time: '11:30', title: 'Product Design Sync', done: false },
+        { id: 'ev-2', time: '16:00', title: 'Gym & Mobility Session', done: false }
+      ],
+      popupFolders: [
+        { id: 'fld-work', name: 'Work', color: '#3b82f6', appIds: ['sc-mail', 'sc-notes', 'sc-claude', 'app-drive'] },
+        { id: 'fld-media', name: 'Media', color: '#ec4899', appIds: ['sc-youtube', 'sc-music', 'app-spotify', 'sc-photos'] },
+        { id: 'fld-social', name: 'Social', color: '#10b981', appIds: ['app-whatsapp', 'app-x', 'app-reddit'] }
+      ],
+      notifications: [
+        { id: 'nt-1', app: 'Mail', title: 'Design Review Approved', body: 'Your latest launcher concept was approved.', time: '5m ago' },
+        { id: 'nt-2', app: 'WhatsApp', title: 'Aarav', body: 'Are we still meeting for coffee at 5?', time: '18m ago' },
+        { id: 'nt-3', app: 'Calendar', title: 'Upcoming Event', body: 'Product Design Sync starts at 11:30.', time: '30m ago' }
+      ],
+      usageLimits: [
+        { appName: 'YouTube', usedMins: 52, limitMins: 45 },
+        { appName: 'Reddit', usedMins: 28, limitMins: 30 },
+        { appName: 'X', usedMins: 15, limitMins: 30 }
+      ],
+      recentAppIds: ['sc-claude', 'sc-youtube', 'sc-mail', 'sc-maps'],
+      launcherStyle: 'nova', // 'nova' | 'niagara'
+      shortcuts: [...DEFAULT_SHORTCUTS],
+      hiddenAppIds: [],
+      habits: [
+        { id: 'hb-1', name: 'Morning Hydration', completedDates: [getPastDateISO(2), getPastDateISO(1)] },
+        { id: 'hb-2', name: 'Deep Focus 45m', completedDates: [getPastDateISO(1)] },
+        { id: 'hb-3', name: 'Evening Walk', completedDates: [] }
+      ],
+      chatHistory: [
+        { sender: 'bot', text: 'Hey Yashu! Tap any chip below or type a command to control your Smart Launcher.' }
+      ]
+    };
+
+    let state = loadState();
+    let activeTab = 'home';
+    let selectedDrawerApp = null;
+    let selectedShortcutColor = '#ec4899';
+    let activeSettingsCategory = 'all';
+    let onboardingStep = 0;
+    let batteryLevelPct = 88;
+    let batteryCharging = true;
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return JSON.parse(JSON.stringify(defaultState));
+        const parsed = JSON.parse(raw);
+        return {
+          ...JSON.parse(JSON.stringify(defaultState)),
+          ...parsed
+        };
+      } catch (err) {
+        console.warn('Storage read fallback:', err);
+        return JSON.parse(JSON.stringify(defaultState));
+      }
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (err) {
+        console.warn('Storage write error (possibly quota exceeded):', err);
+      }
+    }
+
+    /* ==========================================================================
+       3. INITIALIZATION & THEME APPLICATION
+       ========================================================================== */
+    function initApp() {
+      applyVisualSettings();
+      updateClock();
+      setInterval(updateClock, 1000);
+
+      initBatteryAndStorage();
+      fetchLiveWeather();
+
+      setupDoubleTapClock();
+      setupSwipeGestures();
+      setupNiagaraScrubber();
+
+      renderAll();
+      switchTab('home');
+
+      if (!state.onboardingDone) {
+        openOnboardingModal();
+      }
+    }
+
+    function applyVisualSettings() {
+      const root = document.documentElement;
+      root.style.setProperty('--accent', state.accent);
+      root.style.setProperty('--glass-blur', `${state.blur}px`);
+      root.style.setProperty('--icon-size', `${state.iconSize}px`);
+      root.style.setProperty('--icon-radius', `${state.iconRadius}px`);
+      root.style.setProperty('--icon-gap', `${state.iconGap || 14}px`);
+      root.style.setProperty('--grid-cols', state.gridCols);
+      root.style.setProperty('--dock-size', `${state.dockSize || 50}px`);
+      root.style.setProperty('--dock-bg', state.dockColor ? state.dockColor : 'var(--glass-bg-strong)');
+
+      // Typography
+      const fontMap = {
+        sans: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+        jakarta: "'Plus Jakarta Sans', sans-serif",
+        serif: "'Playfair Display', Georgia, serif",
+        mono: "'JetBrains Mono', monospace"
+      };
+      root.style.setProperty('--font-family', fontMap[state.fontStyle] || fontMap.sans);
+
+      // Animation Curve
+      const animMap = {
+        spring: { speed: '0.28s', curve: 'cubic-bezier(0.34, 1.56, 0.64, 1)' },
+        smooth: { speed: '0.36s', curve: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+        snappy: { speed: '0.16s', curve: 'cubic-bezier(0.2, 0, 0, 1)' }
+      };
+      const chosenAnim = animMap[state.animationStyle] || animMap.spring;
+      root.style.setProperty('--anim-speed', chosenAnim.speed);
+      root.style.setProperty('--anim-curve', chosenAnim.curve);
+
+      if (state.theme === 'light') {
+        document.body.classList.add('light-mode');
+      } else {
+        document.body.classList.remove('light-mode');
+      }
+
+      // Wallpaper (Gradient, Online Gallery, or Custom Upload/URL)
+      const wpLayer = document.getElementById('wallpaper-layer');
+      const onlineWp = ONLINE_WALLPAPERS.find(w => w.id === state.wallpaperId);
+      if (state.wallpaperId === 'custom' && state.customWallpaper) {
+        wpLayer.style.backgroundImage = `url(${state.customWallpaper})`;
+      } else if (onlineWp) {
+        wpLayer.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.18), rgba(0,0,0,0.28)), url(${onlineWp.url})`;
+      } else {
+        const preset = WALLPAPERS.find(w => w.id === state.wallpaperId) || WALLPAPERS[0];
+        wpLayer.style.backgroundImage = preset.css;
+      }
+
+      // Clock Style Switch
+      const cDesign = state.clockDesign || 'digital';
+      document.getElementById('clock-style-digital').classList.toggle('hidden', cDesign !== 'digital');
+      document.getElementById('clock-style-editorial').classList.toggle('hidden', cDesign !== 'editorial');
+      document.getElementById('clock-style-stacked').classList.toggle('hidden', cDesign !== 'stacked');
+
+      // Widgets & Dock Visibility
+      const wState = state.widgets || { clock: true, calendar: true, weather: true, battery: true, dock: true };
+      const clockWidgetCard = document.getElementById('widget-clock-card');
+      const calWidgetCard = document.getElementById('widget-calendar-card');
+      const weatherCard = document.getElementById('widget-weather-card');
+      const batteryCard = document.getElementById('widget-battery-card');
+      const weatherSysRow = document.getElementById('widget-weather-system-row');
+      const widgetsStack = document.getElementById('home-widgets-stack');
+      const dockEl = document.getElementById('nova-dock');
+
+      if (clockWidgetCard) clockWidgetCard.classList.toggle('hidden', !wState.clock);
+      if (calWidgetCard) calWidgetCard.classList.toggle('hidden', !wState.calendar);
+      if (weatherCard) weatherCard.classList.toggle('hidden', !wState.weather);
+      if (batteryCard) batteryCard.classList.toggle('hidden', !wState.battery);
+      if (weatherSysRow) {
+        weatherSysRow.classList.toggle('hidden', !wState.weather && !wState.battery);
+        weatherSysRow.classList.toggle('grid-cols-1', (wState.weather && !wState.battery) || (!wState.weather && wState.battery));
+        weatherSysRow.classList.toggle('grid-cols-2', wState.weather && wState.battery);
+      }
+      if (widgetsStack) widgetsStack.classList.toggle('hidden', !wState.clock && !wState.calendar && !wState.weather && !wState.battery);
+      if (dockEl) dockEl.classList.toggle('hidden', !wState.dock || state.launcherStyle === 'niagara');
+
+      // Quick Settings Active Styling
+      const qs = state.quickSettings || { wifi: true, bt: true, dnd: false };
+      ['wifi', 'bt', 'dnd'].forEach(key => {
+        const btn = document.getElementById(`qs-${key}`);
+        if (btn) {
+          btn.style.background = qs[key] ? 'var(--accent)' : '';
+          btn.style.color = qs[key] ? '#ffffff' : '';
+        }
+      });
+      const focusStatusEl = document.getElementById('widget-focus-status');
+      if (focusStatusEl) {
+        focusStatusEl.textContent = qs.dnd ? 'Focus Mode ON' : 'Focus Ready';
+      }
+
+      // Sync Style Tab controls
+      document.getElementById('slider-blur').value = state.blur;
+      document.getElementById('val-blur').textContent = `${state.blur}px`;
+
+      document.getElementById('slider-icon-size').value = state.iconSize;
+      document.getElementById('val-icon-size').textContent = `${state.iconSize}px`;
+
+      document.getElementById('slider-radius').value = state.iconRadius;
+      document.getElementById('val-radius').textContent = `${state.iconRadius}px`;
+
+      const gapSlider = document.getElementById('slider-icon-gap');
+      if (gapSlider) {
+        gapSlider.value = state.iconGap || 14;
+        document.getElementById('val-icon-gap').textContent = `${state.iconGap || 14}px`;
+      }
+
+      document.getElementById('slider-cols').value = state.gridCols;
+      document.getElementById('val-cols').textContent = state.gridCols;
+
+      const dockSizeSlider = document.getElementById('slider-dock-size');
+      if (dockSizeSlider) {
+        dockSizeSlider.value = state.dockSize || 50;
+        document.getElementById('val-dock-size').textContent = `${state.dockSize || 50}px`;
+      }
+
+      const dockCountSlider = document.getElementById('slider-dock-count');
+      if (dockCountSlider) {
+        dockCountSlider.value = state.dockCount || 4;
+        document.getElementById('val-dock-count').textContent = state.dockCount || 4;
+      }
+
+      const nameInput = document.getElementById('custom-username-input');
+      if (nameInput && document.activeElement !== nameInput) {
+        nameInput.value = state.userName || 'Yashu';
+      }
+
+      const themeLabel = document.getElementById('style-theme-label');
+      themeLabel.textContent = state.theme === 'dark' ? 'Dark' : 'Light';
+
+      updateLayoutToggleUI();
+    }
+
+    function updateLayoutToggleUI() {
+      const isNova = state.launcherStyle === 'nova';
+      document.getElementById('view-nova').classList.toggle('hidden', !isNova);
+      document.getElementById('view-niagara').classList.toggle('hidden', isNova);
+
+      const pairs = [
+        ['btn-mode-nova', 'btn-mode-niagara'],
+        ['style-layout-nova', 'style-layout-niagara']
+      ];
+
+      pairs.forEach(([novaId, niagaraId]) => {
+        const novaBtn = document.getElementById(novaId);
+        const niagaraBtn = document.getElementById(niagaraId);
+        if (isNova) {
+          novaBtn.style.backgroundColor = 'var(--accent)';
+          novaBtn.style.color = '#ffffff';
+          niagaraBtn.style.backgroundColor = 'transparent';
+          niagaraBtn.style.color = 'inherit';
+        } else {
+          niagaraBtn.style.backgroundColor = 'var(--accent)';
+          niagaraBtn.style.color = '#ffffff';
+          novaBtn.style.backgroundColor = 'transparent';
+          novaBtn.style.color = 'inherit';
+        }
+      });
+    }
+
+    function renderAll() {
+      renderWeatherWidget();
+      renderCalendarWidget();
+      renderPopupFoldersRow();
+      renderNotificationBadge();
+      renderHomeShortcuts();
+      renderHabitProgressRing();
+      renderHabitsTab();
+      renderAssistantTab();
+      renderStyleTab();
+      renderAppDrawer();
+      if (window.lucide) lucide.createIcons();
+    }
+
+    /* ==========================================================================
+       4. CLOCK, WEATHER, BATTERY, CALENDAR & LOCK SCREEN
+       ========================================================================== */
+    function updateClock() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const mins = String(now.getMinutes()).padStart(2, '0');
+      const secs = String(now.getSeconds()).padStart(2, '0');
+
+      document.getElementById('clock-time').textContent = `${hours}:${mins}`;
+      const secEl = document.getElementById('clock-seconds');
+      if (secEl) secEl.textContent = secs;
+
+      const edEl = document.getElementById('clock-editorial-text');
+      if (edEl) {
+        edEl.textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      }
+      const stHr = document.getElementById('clock-stack-hr');
+      const stMin = document.getElementById('clock-stack-min');
+      if (stHr) stHr.textContent = hours;
+      if (stMin) stMin.textContent = mins;
+
+      // AOD Lock Screen Clock Sync
+      const aodTime = document.getElementById('aod-clock-time');
+      const aodDate = document.getElementById('aod-clock-date');
+      if (aodTime) aodTime.textContent = `${hours}:${mins}`;
+
+      const dateStr = now.toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'short',
+        day: 'numeric'
+      });
+      document.getElementById('clock-date').textContent = dateStr;
+      if (aodDate) aodDate.textContent = dateStr;
+
+      const fullDateEl = document.getElementById('widget-full-date');
+      if (fullDateEl) {
+        fullDateEl.textContent = now.toLocaleDateString('en-US', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        });
+      }
+
+      // Analog Hands Rotation
+      const hDeg = ((now.getHours() % 12) + now.getMinutes() / 60) * 30;
+      const mDeg = (now.getMinutes() + now.getSeconds() / 60) * 6;
+      const sDeg = now.getSeconds() * 6;
+      const hHand = document.getElementById('analog-hour');
+      const mHand = document.getElementById('analog-min');
+      const sHand = document.getElementById('analog-sec');
+      if (hHand) hHand.style.transform = `rotate(${hDeg}deg)`;
+      if (mHand) mHand.style.transform = `rotate(${mDeg}deg)`;
+      if (sHand) sHand.style.transform = `rotate(${sDeg}deg)`;
+
+      const h = now.getHours();
+      let greet = 'Good evening';
+      if (h < 12) greet = 'Good morning';
+      else if (h < 17) greet = 'Good afternoon';
+      document.getElementById('greeting-text').textContent = `${greet}, ${state.userName}`;
+    }
+
+    async function fetchLiveWeather() {
+      const w = state.weather || { city: 'Bengaluru', lat: 12.97, lon: 77.59, unit: 'C', tempC: 26, highC: 29, lowC: 18, condition: 'Clear Sky' };
+      try {
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${w.lat}&longitude=${w.lon}&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&timezone=auto`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.current && typeof data.current.temperature_2m === 'number') {
+            state.weather.tempC = Math.round(data.current.temperature_2m);
+            if (data.daily && data.daily.temperature_2m_max) {
+              state.weather.highC = Math.round(data.daily.temperature_2m_max[0]);
+              state.weather.lowC = Math.round(data.daily.temperature_2m_min[0]);
+            }
+            const code = data.current.weather_code;
+            state.weather.condition = code === 0 ? 'Clear Sky' : code <= 3 ? 'Partly Cloudy' : code >= 61 ? 'Rain Showers' : 'Breezy';
+            saveState();
+          }
+        }
+      } catch (err) {
+        // Fallback gracefully to cached/default weather
+      }
+      renderWeatherWidget();
+    }
+
+    function formatTemp(tempC) {
+      if ((state.weather && state.weather.unit) === 'F') {
+        return `${Math.round((tempC * 9) / 5 + 32)}°F`;
+      }
+      return `${tempC}°C`;
+    }
+
+    function renderWeatherWidget() {
+      const w = state.weather || { city: 'Bengaluru', unit: 'C', tempC: 26, highC: 29, lowC: 18, condition: 'Clear Sky' };
+      const cityEl = document.getElementById('weather-city-label');
+      const tempEl = document.getElementById('weather-temp-val');
+      const condEl = document.getElementById('weather-cond-label');
+      const hiLoEl = document.getElementById('weather-hi-lo');
+      const aodWeather = document.getElementById('aod-weather-line');
+
+      if (cityEl) cityEl.textContent = w.city;
+      if (tempEl) tempEl.textContent = formatTemp(w.tempC);
+      if (condEl) condEl.textContent = w.condition;
+      if (hiLoEl) hiLoEl.textContent = `H: ${formatTemp(w.highC)} • L: ${formatTemp(w.lowC)}`;
+      if (aodWeather) aodWeather.textContent = `☀️ ${formatTemp(w.tempC)} • ${w.city} • 🔋 ${batteryLevelPct}%`;
+    }
+
+    function initBatteryAndStorage() {
+      if (navigator.getBattery) {
+        navigator.getBattery().then(bat => {
+          const updateBat = () => {
+            batteryLevelPct = Math.round(bat.level * 100);
+            batteryCharging = bat.charging;
+            renderBatteryWidget();
+          };
+          updateBat();
+          bat.addEventListener('levelchange', updateBat);
+          bat.addEventListener('chargingchange', updateBat);
+        }).catch(() => renderBatteryWidget());
+      } else {
+        renderBatteryWidget();
+      }
+    }
+
+    function renderBatteryWidget() {
+      const pctEl = document.getElementById('battery-pct-label');
+      const fillEl = document.getElementById('battery-bar-fill');
+      const totalUsedMins = (state.usageLimits || []).reduce((acc, item) => acc + item.usedMins, 47);
+      const hrs = Math.floor(totalUsedMins / 60);
+      const mins = totalUsedMins % 60;
+      const stEl = document.getElementById('screen-time-mini');
+
+      if (pctEl) pctEl.textContent = `${batteryLevelPct}%${batteryCharging ? ' ⚡' : ''}`;
+      if (fillEl) fillEl.style.width = `${batteryLevelPct}%`;
+      if (stEl) stEl.textContent = `Screen time: ${hrs}h ${mins}m`;
+    }
+
+    function renderCalendarWidget() {
+      const stripEl = document.getElementById('widget-calendar-strip');
+      const monthEl = document.getElementById('widget-cal-month');
+      const eventsContainer = document.getElementById('home-calendar-events');
+      if (!stripEl) return;
+
+      const now = new Date();
+      if (monthEl) {
+        monthEl.textContent = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      }
+
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - now.getDay());
+
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      let html = '';
+
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(startOfWeek);
+        d.setDate(startOfWeek.getDate() + i);
+        const isToday = d.toDateString() === now.toDateString();
+
+        html += `
+          <div class="py-1 rounded-2xl flex flex-col items-center justify-center ${isToday ? 'text-white shadow-md font-extrabold' : 'opacity-80'}"
+               style="${isToday ? 'background: var(--accent);' : ''}">
+            <span class="text-[9px] uppercase opacity-75">${dayNames[i]}</span>
+            <span class="text-xs font-bold mt-0.5">${d.getDate()}</span>
+          </div>
+        `;
+      }
+      stripEl.innerHTML = html;
+
+      if (eventsContainer) {
+        const events = state.calendarEvents || [];
+        if (events.length === 0) {
+          eventsContainer.innerHTML = `<div class="text-[11px] opacity-65 px-1">No upcoming events today</div>`;
+        } else {
+          eventsContainer.innerHTML = events.slice(0, 3).map(ev => `
+            <button onclick="toggleCalendarEventDone('${ev.id}')" class="w-full flex items-center justify-between px-1.5 py-1 rounded-xl hover:bg-white/10 text-left text-[11px]">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="font-extrabold shrink-0" style="color: var(--accent);">${escapeHtml(ev.time)}</span>
+                <span class="truncate font-semibold ${ev.done ? 'line-through opacity-55' : ''}">${escapeHtml(ev.title)}</span>
+              </div>
+              <i data-lucide="${ev.done ? 'check-circle-2' : 'circle'}" class="w-3.5 h-3.5 shrink-0 opacity-75"></i>
+            </button>
+          `).join('');
+        }
+      }
+    }
+
+    function setupDoubleTapClock() {
+      const clockEl = document.getElementById('clock-widget');
+      let lastTap = 0;
+
+      clockEl.addEventListener('click', () => {
+        const now = Date.now();
+        if (now - lastTap < 320) {
+          toggleThemeMode();
+        }
+        lastTap = now;
+      });
+    }
+
+    function toggleThemeMode(forceMode) {
+      if (forceMode === 'dark' || forceMode === 'light') {
+        state.theme = forceMode;
+      } else {
+        state.theme = state.theme === 'dark' ? 'light' : 'dark';
+      }
+      saveState();
+      applyVisualSettings();
+      if (window.lucide) lucide.createIcons();
+      showToast(`Switched to ${state.theme === 'dark' ? 'Dark' : 'Light'} Mode`);
+    }
+
+    function toggleQuickSetting(key) {
+      if (!state.quickSettings) state.quickSettings = { wifi: true, bt: true, dnd: false };
+      state.quickSettings[key] = !state.quickSettings[key];
+      saveState();
+      applyVisualSettings();
+      renderNotificationBadge();
+      const labels = { wifi: 'Wi-Fi', bt: 'Bluetooth', dnd: 'Focus / DND' };
+      showToast(`${labels[key]} ${state.quickSettings[key] ? 'ON' : 'OFF'}`);
+    }
+
+    function toggleScreenTorch(show) {
+      document.getElementById('screen-torch-overlay').classList.toggle('hidden', !show);
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function lockDeviceScreen() {
+      updateClock();
+      renderWeatherWidget();
+      document.getElementById('aod-lock-screen').classList.remove('hidden');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function unlockDeviceScreen() {
+      document.getElementById('aod-lock-screen').classList.add('hidden');
+      showToast(`Welcome back, ${state.userName}`);
+    }
+
+    /* ==========================================================================
+       5. NAVIGATION, POPUP FOLDERS & LAUNCHER HOME (NOVA & NIAGARA)
+       ========================================================================== */
+    function switchTab(tabName) {
+      activeTab = tabName;
+      document.querySelectorAll('.tab-view').forEach(el => {
+        el.classList.add('hidden');
+        el.classList.remove('flex');
+      });
+
+      const target = document.getElementById(`tab-${tabName}`);
+      if (target) {
+        target.classList.remove('hidden');
+        target.classList.add('flex');
+      }
+
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        const isCurrent = btn.dataset.tab === tabName;
+        if (isCurrent) {
+          btn.style.backgroundColor = 'var(--accent)';
+          btn.style.color = '#ffffff';
+        } else {
+          btn.style.backgroundColor = 'transparent';
+          btn.style.color = 'inherit';
+        }
+      });
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function setLauncherStyle(mode) {
+      state.launcherStyle = mode;
+      saveState();
+      applyVisualSettings();
+      showToast(`${mode === 'nova' ? 'Nova Grid' : 'Niagara Minimal'} Layout`);
+    }
+
+    function renderPopupFoldersRow() {
+      const row = document.getElementById('home-popup-folders-row');
+      if (!row) return;
+      const folders = state.popupFolders || [];
+      row.innerHTML = folders.map(fld => `
+        <button onclick="openPopupFolder('${fld.id}')"
+                class="glass-card px-3.5 py-2 rounded-2xl flex items-center gap-2 shrink-0 active:scale-95 transition-transform">
+          <span class="w-6 h-6 rounded-xl flex items-center justify-center text-white" style="background: ${fld.color || 'var(--accent)'};">
+            <i data-lucide="folder" class="w-3.5 h-3.5"></i>
+          </span>
+          <div class="text-left">
+            <div class="text-xs font-extrabold leading-tight">${escapeHtml(fld.name)}</div>
+            <div class="text-[9px] opacity-70">${fld.appIds.length} apps</div>
+          </div>
+        </button>
+      `).join('');
+    }
+
+    function openPopupFolder(folderId) {
+      const fld = (state.popupFolders || []).find(f => f.id === folderId);
+      if (!fld) return;
+      document.getElementById('popup-folder-title').textContent = fld.name;
+      const grid = document.getElementById('popup-folder-apps-grid');
+      const allApps = getCombinedApps();
+
+      grid.innerHTML = fld.appIds.map(id => {
+        const app = allApps.find(a => a.id === id) || ALL_APPS_CATALOG.find(a => a.id === id);
+        if (!app) return '';
+        return `
+          <a href="${escapeHtml(app.url)}" target="_blank" rel="noopener noreferrer"
+             onclick="return handleLaunchApp(event, '${escapeHtml(app.name)}', '${escapeHtml(app.url)}', '${app.id}')"
+             class="flex flex-col items-center gap-1.5 active:scale-90 transition-transform">
+            <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-md" style="background: ${getIconBackground(app)};">
+              <i data-lucide="${app.icon || 'globe'}" class="w-6 h-6"></i>
+            </div>
+            <span class="text-xs font-semibold truncate max-w-[72px]">${escapeHtml(app.name)}</span>
+          </a>
+        `;
+      }).join('');
+
+      document.getElementById('popup-folder-modal').classList.remove('hidden');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function closePopupFolder(e) {
+      if (!e || e.target.id === 'popup-folder-modal') {
+        document.getElementById('popup-folder-modal').classList.add('hidden');
+      }
+    }
+
+    function getIconBackground(app) {
+      const pack = state.iconPackStyle || 'vivid';
+      if (pack === 'monochrome') return 'rgba(255, 255, 255, 0.22)';
+      if (pack === 'glass') return `linear-gradient(135deg, ${app.color || 'var(--accent)'}aa, rgba(255,255,255,0.18))`;
+      return app.color || 'var(--accent)';
+    }
+
+    function getUnreadBadgeCount(appName) {
+      if (state.quickSettings && state.quickSettings.dnd) return 0;
+      const notifs = state.notifications || [];
+      return notifs.filter(n => n.app.toLowerCase() === appName.toLowerCase()).length;
+    }
+
+    function handleLaunchApp(event, appName, url, appId) {
+      // Track in Recently Used
+      if (appId) {
+        state.recentAppIds = [appId, ...(state.recentAppIds || []).filter(id => id !== appId)].slice(0, 6);
+      }
+      // Clear notifications for that app
+      state.notifications = (state.notifications || []).filter(n => n.app.toLowerCase() !== appName.toLowerCase());
+      saveState();
+      renderNotificationBadge();
+      renderHomeShortcuts();
+
+      // Check Usage Breaker Limit
+      const limitObj = (state.usageLimits || []).find(u => u.appName.toLowerCase() === appName.toLowerCase());
+      if (limitObj && limitObj.usedMins >= limitObj.limitMins) {
+        if (event) event.preventDefault();
+        document.getElementById('usage-breaker-msg').textContent =
+          `You've used ${limitObj.appName} for ${limitObj.usedMins} mins today (Limit: ${limitObj.limitMins} mins). Take a mindful pause?`;
+        document.getElementById('usage-breaker-proceed-link').href = url;
+        document.getElementById('usage-breaker-modal').classList.remove('hidden');
+        if (window.lucide) lucide.createIcons();
+        return false;
+      }
+      return true;
+    }
+
+    function closeUsageBreakerModal() {
+      document.getElementById('usage-breaker-modal').classList.add('hidden');
+    }
+
+    function renderHomeShortcuts() {
+      const gridEl = document.getElementById('nova-shortcuts-grid');
+      const dockEl = document.getElementById('nova-dock');
+      gridEl.innerHTML = '';
+      dockEl.innerHTML = '';
+
+      const count = state.dockCount || 4;
+      const dockSize = state.dockSize || 50;
+      const dockItems = state.shortcuts.slice(0, count);
+      const gridItems = state.shortcuts;
+
+      gridItems.forEach(sc => {
+        const badgeCount = getUnreadBadgeCount(sc.name);
+        const item = document.createElement('div');
+        item.className = 'flex flex-col items-center gap-1.5 group relative';
+        item.innerHTML = `
+          <div class="relative">
+            <a href="${escapeHtml(sc.url)}" target="_blank" rel="noopener noreferrer"
+               onclick="return handleLaunchApp(event, '${escapeHtml(sc.name)}', '${escapeHtml(sc.url)}', '${sc.id}')"
+               class="app-icon-box shadow-lg text-white"
+               style="background: ${getIconBackground(sc)};">
+              <i data-lucide="${sc.icon || 'globe'}" class="w-6 h-6"></i>
+            </a>
+            ${badgeCount > 0 ? `<span class="pointer-events-none absolute -top-1 -left-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-extrabold flex items-center justify-center shadow">${badgeCount}</span>` : ''}
+            <button onclick="openShortcutModal('${sc.id}')"
+                    class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full glass-strong flex items-center justify-center opacity-80 hover:opacity-100"
+                    title="Edit shortcut">
+              <i data-lucide="pencil" class="w-2.5 h-2.5"></i>
+            </button>
+          </div>
+          <span class="text-xs font-medium truncate max-w-[74px] text-center">${escapeHtml(sc.name)}</span>
+        `;
+        gridEl.appendChild(item);
+      });
+
+      dockItems.forEach(sc => {
+        const badgeCount = getUnreadBadgeCount(sc.name);
+        const wrap = document.createElement('div');
+        wrap.className = 'relative';
+        wrap.innerHTML = `
+          <a href="${escapeHtml(sc.url)}" target="_blank" rel="noopener noreferrer"
+             onclick="return handleLaunchApp(event, '${escapeHtml(sc.name)}', '${escapeHtml(sc.url)}', '${sc.id}')"
+             class="app-icon-box shadow-md text-white"
+             style="background: ${getIconBackground(sc)}; width: ${dockSize}px; height: ${dockSize}px;">
+            <i data-lucide="${sc.icon || 'globe'}" class="w-5 h-5"></i>
+          </a>
+          ${badgeCount > 0 ? `<span class="pointer-events-none absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 rounded-full bg-rose-500 text-white text-[9px] font-extrabold flex items-center justify-center shadow">${badgeCount}</span>` : ''}
+        `;
+        dockEl.appendChild(wrap);
+      });
+
+      // Render Niagara Minimal List (Alphabetical)
+      const niagaraList = document.getElementById('niagara-list');
+      niagaraList.innerHTML = '';
+
+      const sorted = [...state.shortcuts].sort((a, b) => a.name.localeCompare(b.name));
+      sorted.forEach(sc => {
+        const firstLetter = sc.name.charAt(0).toUpperCase();
+        const badgeCount = getUnreadBadgeCount(sc.name);
+        const row = document.createElement('div');
+        row.dataset.letter = firstLetter;
+        row.className = 'glass-card rounded-2xl px-4 py-2.5 flex items-center justify-between active:scale-[0.98] transition-transform';
+        row.innerHTML = `
+          <a href="${escapeHtml(sc.url)}" target="_blank" rel="noopener noreferrer"
+             onclick="return handleLaunchApp(event, '${escapeHtml(sc.name)}', '${escapeHtml(sc.url)}', '${sc.id}')"
+             class="flex items-center gap-3.5 flex-1">
+            <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-white shadow-sm shrink-0 relative"
+                 style="background: ${getIconBackground(sc)};">
+              <i data-lucide="${sc.icon || 'globe'}" class="w-5 h-5"></i>
+              ${badgeCount > 0 ? `<span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-[9px] font-extrabold flex items-center justify-center">${badgeCount}</span>` : ''}
+            </div>
+            <span class="text-base font-bold tracking-tight">${escapeHtml(sc.name)}</span>
+          </a>
+          <button onclick="openShortcutModal('${sc.id}')" class="p-2 opacity-60 hover:opacity-100" aria-label="Edit ${escapeHtml(sc.name)}">
+            <i data-lucide="more-vertical" class="w-4 h-4"></i>
+          </button>
+        `;
+        niagaraList.appendChild(row);
+      });
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function setupNiagaraScrubber() {
+      const azBar = document.getElementById('niagara-az-bar');
+      const bubble = document.getElementById('niagara-letter-bubble');
+      const listEl = document.getElementById('niagara-list');
+      const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+
+      azBar.innerHTML = letters.map(l => `<span class="leading-none">${l}</span>`).join('');
+
+      function handleScrub(clientY) {
+        const rect = azBar.getBoundingClientRect();
+        const ratio = Math.max(0, Math.min(0.999, (clientY - rect.top) / rect.height));
+        const idx = Math.floor(ratio * letters.length);
+        const letter = letters[idx];
+
+        bubble.textContent = letter;
+        bubble.classList.remove('hidden');
+
+        // Scroll to matching letter or closest next letter
+        const items = Array.from(listEl.children);
+        const match = items.find(el => el.dataset.letter >= letter) || items[items.length - 1];
+        if (match) {
+          match.scrollIntoView({ block: 'start', behavior: 'auto' });
+        }
+      }
+
+      azBar.addEventListener('touchstart', e => {
+        e.preventDefault();
+        handleScrub(e.touches[0].clientY);
+      }, { passive: false });
+
+      azBar.addEventListener('touchmove', e => {
+        e.preventDefault();
+        handleScrub(e.touches[0].clientY);
+      }, { passive: false });
+
+      azBar.addEventListener('touchend', () => {
+        bubble.classList.add('hidden');
+      });
+
+      azBar.addEventListener('mousedown', e => {
+        handleScrub(e.clientY);
+        const onMove = ev => handleScrub(ev.clientY);
+        const onUp = () => {
+          bubble.classList.add('hidden');
+          window.removeEventListener('mousemove', onMove);
+          window.removeEventListener('mouseup', onUp);
+        };
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+      });
+    }
+
+    /* ==========================================================================
+       6. SHORTCUT ADD / EDIT / REMOVE MODAL
+       ========================================================================== */
+    function openShortcutModal(shortcutId = null) {
+      const modal = document.getElementById('shortcut-modal');
+      const titleEl = document.getElementById('shortcut-modal-title');
+      const idInput = document.getElementById('shortcut-edit-id');
+      const nameInput = document.getElementById('shortcut-name-input');
+      const urlInput = document.getElementById('shortcut-url-input');
+      const delBtn = document.getElementById('btn-delete-shortcut');
+
+      if (shortcutId) {
+        const existing = state.shortcuts.find(s => s.id === shortcutId);
+        if (!existing) return;
+        titleEl.textContent = 'Edit Shortcut';
+        idInput.value = existing.id;
+        nameInput.value = existing.name;
+        urlInput.value = existing.url;
+        selectedShortcutColor = existing.color || '#ec4899';
+        delBtn.classList.remove('hidden');
+      } else {
+        titleEl.textContent = 'Add Shortcut';
+        idInput.value = '';
+        nameInput.value = '';
+        urlInput.value = '';
+        selectedShortcutColor = state.accent;
+        delBtn.classList.add('hidden');
+      }
+
+      renderShortcutColorOptions();
+      modal.classList.remove('hidden');
+    }
+
+    function renderShortcutColorOptions() {
+      const container = document.getElementById('shortcut-color-options');
+      container.innerHTML = ACCENT_COLORS.map(c => `
+        <button type="button" onclick="selectShortcutColor('${c.hex}')"
+                class="w-7 h-7 rounded-full border-2 transition-transform ${selectedShortcutColor === c.hex ? 'scale-110 border-white' : 'border-transparent'}"
+                style="background-color: ${c.hex};"></button>
+      `).join('');
+    }
+
+    function selectShortcutColor(hex) {
+      selectedShortcutColor = hex;
+      renderShortcutColorOptions();
+    }
+
+    function closeShortcutModal(e) {
+      if (!e || e.target.id === 'shortcut-modal') {
+        document.getElementById('shortcut-modal').classList.add('hidden');
+      }
+    }
+
+    function normalizeUrl(rawUrl) {
+      let clean = rawUrl.trim();
+      if (!/^https?:\/\//i.test(clean)) {
+        clean = 'https://' + clean;
+      }
+      return clean;
+    }
+
+    function saveShortcutForm(e) {
+      e.preventDefault();
+      const id = document.getElementById('shortcut-edit-id').value;
+      const name = document.getElementById('shortcut-name-input').value.trim();
+      const url = normalizeUrl(document.getElementById('shortcut-url-input').value);
+
+      if (!name || !url) return;
+
+      if (id) {
+        const idx = state.shortcuts.findIndex(s => s.id === id);
+        if (idx !== -1) {
+          state.shortcuts[idx] = { ...state.shortcuts[idx], name, url, color: selectedShortcutColor };
+        }
+        showToast(`Updated ${name}`);
+      } else {
+        state.shortcuts.push({
+          id: 'sc-' + Date.now(),
+          name,
+          url,
+          icon: 'globe',
+          color: selectedShortcutColor
+        });
+        showToast(`Added ${name}`);
+      }
+
+      saveState();
+      renderHomeShortcuts();
+      closeShortcutModal();
+    }
+
+    function deleteCurrentShortcut() {
+      const id = document.getElementById('shortcut-edit-id').value;
+      if (!id) return;
+      state.shortcuts = state.shortcuts.filter(s => s.id !== id);
+      saveState();
+      renderHomeShortcuts();
+      closeShortcutModal();
+      showToast('Shortcut removed');
+    }
+
+    /* ==========================================================================
+       7. SWIPEABLE APP DRAWER + LONG-PRESS PIN / HIDE
+       ========================================================================== */
+    function openDrawer() {
+      const drawer = document.getElementById('app-drawer');
+      drawer.classList.add('open');
+      renderAppDrawer();
+    }
+
+    function closeDrawer() {
+      const drawer = document.getElementById('app-drawer');
+      drawer.classList.remove('open');
+      document.getElementById('drawer-search-input').value = '';
+      document.getElementById('drawer-search-clear').classList.add('hidden');
+    }
+
+    function clearDrawerSearch() {
+      document.getElementById('drawer-search-input').value = '';
+      document.getElementById('drawer-search-clear').classList.add('hidden');
+      renderAppDrawer();
+    }
+
+    function setupSwipeGestures() {
+      let touchStartY = 0;
+      let touchStartX = 0;
+      let lastHomeTap = 0;
+
+      const homeTab = document.getElementById('tab-home');
+      homeTab.addEventListener('touchstart', e => {
+        touchStartY = e.touches[0].clientY;
+        touchStartX = e.touches[0].clientX;
+      }, { passive: true });
+
+      homeTab.addEventListener('touchend', e => {
+        const deltaY = touchStartY - e.changedTouches[0].clientY;
+        const deltaX = Math.abs(touchStartX - e.changedTouches[0].clientX);
+        if (Math.abs(deltaY) > 75 && deltaX < 50) {
+          const action = deltaY > 0 ? (state.gestures?.swipeUp || 'drawer') : (state.gestures?.swipeDown || 'notifications');
+          executeGestureAction(action);
+        }
+      }, { passive: true });
+
+      // Double tap empty home background
+      homeTab.addEventListener('click', e => {
+        if (e.target.id === 'home-scroll-area' || e.target.id === 'nova-grid-container') {
+          const now = Date.now();
+          if (now - lastHomeTap < 320) {
+            executeGestureAction(state.gestures?.doubleTap || 'lock');
+          }
+          lastHomeTap = now;
+        }
+      });
+
+      // Swipe down on App Drawer header or top of scroll closes App Drawer
+      const drawer = document.getElementById('app-drawer');
+      const drawerContent = document.getElementById('drawer-content');
+      let drawerStartY = 0;
+
+      drawer.addEventListener('touchstart', e => {
+        drawerStartY = e.touches[0].clientY;
+      }, { passive: true });
+
+      drawer.addEventListener('touchend', e => {
+        const pullDown = e.changedTouches[0].clientY - drawerStartY;
+        if (pullDown > 75 && drawerContent.scrollTop <= 5) {
+          closeDrawer();
+        }
+      }, { passive: true });
+    }
+
+    function executeGestureAction(action) {
+      if (action === 'drawer') openDrawer();
+      else if (action === 'search') {
+        openDrawer();
+        setTimeout(() => document.getElementById('drawer-search-input').focus(), 200);
+      } else if (action === 'assistant') switchTab('assistant');
+      else if (action === 'lock') lockDeviceScreen();
+      else if (action === 'notifications') openNotificationSheet();
+      else if (action === 'theme') toggleThemeMode();
+      else if (action === 'torch') toggleScreenTorch(true);
+    }
+
+    function getCombinedApps() {
+      const map = new Map();
+      ALL_APPS_CATALOG.forEach(app => map.set(app.name.toLowerCase(), app));
+      state.shortcuts.forEach(sc => {
+        if (!map.has(sc.name.toLowerCase())) {
+          map.set(sc.name.toLowerCase(), sc);
+        }
+      });
+      return Array.from(map.values())
+        .filter(app => !state.hiddenAppIds.includes(app.id))
+        .sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    function renderAppDrawer() {
+      const query = document.getElementById('drawer-search-input').value.trim();
+      const clearBtn = document.getElementById('drawer-search-clear');
+      clearBtn.classList.toggle('hidden', query.length === 0);
+
+      const grid = document.getElementById('drawer-apps-grid');
+      const fallback = document.getElementById('drawer-web-fallback');
+      const recentRow = document.getElementById('drawer-recent-row');
+      const contactsRow = document.getElementById('drawer-contacts-row');
+      const eventsResults = document.getElementById('drawer-events-results');
+      grid.innerHTML = '';
+
+      const allCombined = getCombinedApps();
+
+      // Recent Apps Strip
+      if (recentRow) {
+        const recents = (state.recentAppIds || [])
+          .map(id => allCombined.find(a => a.id === id))
+          .filter(Boolean);
+        recentRow.innerHTML = recents.map(app => `
+          <a href="${escapeHtml(app.url)}" target="_blank" rel="noopener noreferrer"
+             onclick="return handleLaunchApp(event, '${escapeHtml(app.name)}', '${escapeHtml(app.url)}', '${app.id}')"
+             class="glass-card px-3 py-2 rounded-2xl flex items-center gap-2 shrink-0">
+            <span class="w-6 h-6 rounded-lg flex items-center justify-center text-white" style="background: ${getIconBackground(app)};">
+              <i data-lucide="${app.icon || 'globe'}" class="w-3.5 h-3.5"></i>
+            </span>
+            <span class="text-xs font-bold">${escapeHtml(app.name)}</span>
+          </a>
+        `).join('');
+      }
+
+      // Favourite Contacts (filtered by search if query exists)
+      if (contactsRow) {
+        const matchingContacts = FAVOURITE_CONTACTS.filter(c =>
+          !query || c.name.toLowerCase().includes(query.toLowerCase()) || c.role.toLowerCase().includes(query.toLowerCase())
+        );
+        document.getElementById('drawer-contacts-section').classList.toggle('hidden', matchingContacts.length === 0);
+        contactsRow.innerHTML = matchingContacts.map(ct => `
+          <div class="glass-card p-2.5 rounded-2xl flex flex-col justify-between gap-1.5">
+            <div class="flex items-center gap-2">
+              <span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-extrabold text-white shrink-0" style="background: ${ct.color};">${ct.name[0]}</span>
+              <div class="min-w-0">
+                <div class="text-xs font-extrabold truncate">${escapeHtml(ct.name)}</div>
+                <div class="text-[9px] opacity-70 truncate">${escapeHtml(ct.role)}</div>
+              </div>
+            </div>
+            <div class="flex gap-1 pt-0.5">
+              <a href="tel:${ct.phone}" class="flex-1 glass-strong py-1 rounded-xl flex items-center justify-center text-emerald-400" title="Call ${ct.name}">
+                <i data-lucide="phone" class="w-3 h-3"></i>
+              </a>
+              <a href="sms:${ct.phone}" class="flex-1 glass-strong py-1 rounded-xl flex items-center justify-center text-sky-400" title="Message ${ct.name}">
+                <i data-lucide="message-square" class="w-3 h-3"></i>
+              </a>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // Smart Search Calendar Events Match
+      if (eventsResults) {
+        const matchingEvents = query
+          ? (state.calendarEvents || []).filter(ev => ev.title.toLowerCase().includes(query.toLowerCase()))
+          : [];
+        eventsResults.classList.toggle('hidden', matchingEvents.length === 0);
+        eventsResults.innerHTML = matchingEvents.map(ev => `
+          <div class="glass-card px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-xs">
+            <span class="font-bold">📅 ${escapeHtml(ev.title)}</span>
+            <span class="font-extrabold" style="color: var(--accent);">${escapeHtml(ev.time)}</span>
+          </div>
+        `).join('');
+      }
+
+      const apps = allCombined.filter(app =>
+        app.name.toLowerCase().includes(query.toLowerCase())
+      );
+
+      apps.forEach(app => {
+        const isPinned = state.shortcuts.some(s => s.name.toLowerCase() === app.name.toLowerCase());
+        const cell = document.createElement('div');
+        cell.className = 'flex flex-col items-center gap-1.5 select-none';
+        cell.innerHTML = `
+          <a href="${escapeHtml(app.url)}" target="_blank" rel="noopener noreferrer"
+             class="w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-md relative active:scale-90 transition-transform"
+             style="background: ${getIconBackground(app)};">
+            <i data-lucide="${app.icon || 'globe'}" class="w-6 h-6"></i>
+            ${isPinned ? `<span class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-white text-black flex items-center justify-center shadow"><i data-lucide="pin" class="w-2.5 h-2.5"></i></span>` : ''}
+          </a>
+          <span class="text-xs font-medium truncate max-w-[72px] text-center">${escapeHtml(app.name)}</span>
+        `;
+
+        // Attach Long-Press Handler (Touch & Mouse)
+        let pressTimer = null;
+        let longPressed = false;
+
+        const startPress = () => {
+          longPressed = false;
+          pressTimer = setTimeout(() => {
+            longPressed = true;
+            openAppActionModal(app);
+          }, 500);
+        };
+
+        const cancelPress = () => {
+          if (pressTimer) clearTimeout(pressTimer);
+        };
+
+        cell.addEventListener('touchstart', startPress, { passive: true });
+        cell.addEventListener('touchend', cancelPress);
+        cell.addEventListener('touchmove', cancelPress);
+        cell.addEventListener('mousedown', startPress);
+        cell.addEventListener('mouseup', cancelPress);
+        cell.addEventListener('mouseleave', cancelPress);
+        cell.addEventListener('contextmenu', e => {
+          e.preventDefault();
+          openAppActionModal(app);
+        });
+
+        cell.querySelector('a').addEventListener('click', e => {
+          if (longPressed) {
+            e.preventDefault();
+            return;
+          }
+          handleLaunchApp(e, app.name, app.url, app.id);
+        });
+
+        grid.appendChild(cell);
+      });
+
+      // Web Search Fallback when query is present
+      if (query.length > 0) {
+        fallback.classList.remove('hidden');
+        const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+        fallback.innerHTML = `
+          <a href="${googleSearchUrl}" target="_blank" rel="noopener noreferrer"
+             class="glass-card rounded-2xl p-3.5 flex items-center justify-between active:scale-98">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white" style="background: var(--accent);">
+                <i data-lucide="globe" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <div class="text-sm font-bold">Search Web for "${escapeHtml(query)}"</div>
+                <div class="text-xs opacity-70">Open in Google Search</div>
+              </div>
+            </div>
+            <i data-lucide="external-link" class="w-4 h-4 opacity-70"></i>
+          </a>
+        `;
+      } else {
+        fallback.classList.add('hidden');
+        fallback.innerHTML = '';
+      }
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function openAppActionModal(app) {
+      selectedDrawerApp = app;
+      const modal = document.getElementById('app-action-modal');
+      const iconBox = document.getElementById('modal-app-icon');
+      iconBox.style.background = app.color || 'var(--accent)';
+      iconBox.innerHTML = `<i data-lucide="${app.icon || 'globe'}" class="w-6 h-6"></i>`;
+
+      document.getElementById('modal-app-name').textContent = app.name;
+      document.getElementById('modal-app-url').textContent = app.url;
+
+      const isPinned = state.shortcuts.some(s => s.name.toLowerCase() === app.name.toLowerCase());
+      document.getElementById('modal-pin-text').textContent = isPinned ? 'Unpin from Home' : 'Pin to Home';
+
+      modal.classList.remove('hidden');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function closeAppActionModal(e) {
+      if (!e || e.target.id === 'app-action-modal') {
+        document.getElementById('app-action-modal').classList.add('hidden');
+      }
+    }
+
+    function togglePinSelectedApp() {
+      if (!selectedDrawerApp) return;
+      const idx = state.shortcuts.findIndex(s => s.name.toLowerCase() === selectedDrawerApp.name.toLowerCase());
+      if (idx !== -1) {
+        state.shortcuts.splice(idx, 1);
+        showToast(`Unpinned ${selectedDrawerApp.name}`);
+      } else {
+        state.shortcuts.push({
+          id: 'sc-' + Date.now(),
+          name: selectedDrawerApp.name,
+          url: selectedDrawerApp.url,
+          icon: selectedDrawerApp.icon || 'globe',
+          color: selectedDrawerApp.color || state.accent
+        });
+        showToast(`Pinned ${selectedDrawerApp.name} to Home`);
+      }
+      saveState();
+      renderHomeShortcuts();
+      renderAppDrawer();
+      closeAppActionModal();
+    }
+
+    function hideSelectedApp() {
+      if (!selectedDrawerApp) return;
+      if (!state.hiddenAppIds.includes(selectedDrawerApp.id)) {
+        state.hiddenAppIds.push(selectedDrawerApp.id);
+      }
+      state.shortcuts = state.shortcuts.filter(s => s.name.toLowerCase() !== selectedDrawerApp.name.toLowerCase());
+      saveState();
+      renderHomeShortcuts();
+      renderAppDrawer();
+      renderStyleTab();
+      closeAppActionModal();
+      showToast(`Hid ${selectedDrawerApp.name}`);
+    }
+
+    function unhideAllApps() {
+      if (state.vaultPinEnabled) {
+        const entered = window.prompt('Enter App Vault PIN to unhide apps (Default: 1234):');
+        if (entered !== '1234') {
+          showToast('Incorrect Vault PIN');
+          return;
+        }
+      }
+      state.hiddenAppIds = [];
+      saveState();
+      renderAppDrawer();
+      renderStyleTab();
+      showToast('All hidden apps restored');
+    }
+
+    /* ==========================================================================
+       7B. NOTIFICATIONS SHEET & ONBOARDING TOUR
+       ========================================================================== */
+    function renderNotificationBadge() {
+      const badge = document.getElementById('header-notif-badge');
+      if (!badge) return;
+      const count = (state.notifications || []).length;
+      const muted = state.quickSettings && state.quickSettings.dnd;
+      badge.classList.toggle('hidden', count === 0 || muted);
+      badge.textContent = count;
+    }
+
+    function openNotificationSheet() {
+      const list = document.getElementById('notifications-list');
+      const notifs = state.notifications || [];
+      if (notifs.length === 0) {
+        list.innerHTML = `<div class="text-center text-xs opacity-70 py-8">All caught up! No new notifications.</div>`;
+      } else {
+        list.innerHTML = notifs.map(n => `
+          <div class="glass-card p-3 rounded-2xl flex items-start justify-between gap-2">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] font-extrabold uppercase" style="color: var(--accent);">${escapeHtml(n.app)}</span>
+                <span class="text-[10px] opacity-60">${escapeHtml(n.time)}</span>
+              </div>
+              <div class="text-xs font-bold mt-0.5">${escapeHtml(n.title)}</div>
+              <div class="text-[11px] opacity-75 mt-0.5">${escapeHtml(n.body)}</div>
+            </div>
+            <button onclick="dismissSingleNotification('${n.id}')" class="p-1 opacity-60 hover:opacity-100">
+              <i data-lucide="x" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        `).join('');
+      }
+      document.getElementById('notifications-modal').classList.remove('hidden');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function closeNotificationSheet(e) {
+      if (!e || e.target.id === 'notifications-modal') {
+        document.getElementById('notifications-modal').classList.add('hidden');
+      }
+    }
+
+    function dismissSingleNotification(id) {
+      state.notifications = (state.notifications || []).filter(n => n.id !== id);
+      saveState();
+      renderNotificationBadge();
+      renderHomeShortcuts();
+      openNotificationSheet();
+    }
+
+    function clearAllNotificationBadges() {
+      state.notifications = [];
+      saveState();
+      renderNotificationBadge();
+      renderHomeShortcuts();
+      if (!document.getElementById('notifications-modal').classList.contains('hidden')) {
+        openNotificationSheet();
+      }
+      showToast('All notifications cleared');
+    }
+
+    const ONBOARDING_SLIDES = [
+      {
+        title: 'Dual Launcher Engines',
+        desc: 'Switch effortlessly between Nova Icon Grid + Custom Dock and Niagara Minimalist A–Z Alphabetical List.'
+      },
+      {
+        title: 'Smart Widgets & Popup Folders',
+        desc: 'Live Open-Meteo weather, interactive calendar reminders, floating app folders, and quick torch/AOD lock.'
+      },
+      {
+        title: '12-Category Control Center',
+        desc: 'Customize fonts, icon packs, Material You tint, gestures, Usage Breaker wellbeing limits, and JSON backups.'
+      }
+    ];
+
+    function openOnboardingModal() {
+      onboardingStep = 0;
+      renderOnboardingStep();
+      document.getElementById('onboarding-modal').classList.remove('hidden');
+    }
+
+    function renderOnboardingStep() {
+      const slide = ONBOARDING_SLIDES[onboardingStep];
+      document.getElementById('onboarding-step-content').innerHTML = `
+        <h3 class="text-lg font-extrabold">${slide.title}</h3>
+        <p class="text-xs opacity-80 leading-relaxed">${slide.desc}</p>
+      `;
+      document.getElementById('onboarding-dots').innerHTML = ONBOARDING_SLIDES.map((_, idx) => `
+        <span class="w-2 h-2 rounded-full ${idx === onboardingStep ? 'w-5' : 'opacity-35'}" style="background: var(--accent);"></span>
+      `).join('');
+      document.getElementById('onboarding-next-btn').textContent =
+        onboardingStep === ONBOARDING_SLIDES.length - 1 ? 'Get Started' : 'Next';
+    }
+
+    function nextOnboardingStep() {
+      if (onboardingStep < ONBOARDING_SLIDES.length - 1) {
+        onboardingStep++;
+        renderOnboardingStep();
+      } else {
+        closeOnboardingModal();
+      }
+    }
+
+    function closeOnboardingModal() {
+      state.onboardingDone = true;
+      saveState();
+      document.getElementById('onboarding-modal').classList.add('hidden');
+    }
+
+    /* ==========================================================================
+       8. HABITS TRACKER (STREAKS, 7-DAY DOT STRIP, PROGRESS RING)
+       ========================================================================== */
+    function calculateStreak(completedDates) {
+      const set = new Set(completedDates);
+      let streak = 0;
+      const today = getTodayISO();
+      let offset = set.has(today) ? 0 : 1;
+
+      while (true) {
+        const dateKey = getPastDateISO(offset);
+        if (set.has(dateKey)) {
+          streak++;
+          offset++;
+        } else {
+          break;
+        }
+      }
+      return streak;
+    }
+
+    function renderHabitProgressRing() {
+      const today = getTodayISO();
+      const total = state.habits.length;
+      const done = state.habits.filter(h => h.completedDates.includes(today)).length;
+
+      const circle = document.getElementById('habit-ring-circle');
+      const label = document.getElementById('habit-ring-label');
+      const summaryPill = document.getElementById('habits-summary-pill');
+
+      const circumference = 138.23;
+      const ratio = total === 0 ? 0 : done / total;
+      const offset = circumference - ratio * circumference;
+
+      circle.style.strokeDashoffset = offset;
+      label.textContent = `${done}/${total}`;
+      if (summaryPill) {
+        summaryPill.textContent = `${Math.round(ratio * 100)}% Today`;
+      }
+    }
+
+    function renderHabitsTab() {
+      const container = document.getElementById('habits-list-container');
+      const today = getTodayISO();
+      renderHabitProgressRing();
+
+      if (state.habits.length === 0) {
+        container.innerHTML = `
+          <div class="glass-card rounded-3xl p-8 text-center opacity-75">
+            <p class="text-sm font-semibold">No habits yet</p>
+            <p class="text-xs mt-1">Add a habit above or via Assistant ("add habit Read")</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Build last 7 days array (oldest to today)
+      const last7Days = [];
+      const dayLetters = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+      for (let i = 6; i >= 0; i--) {
+        const iso = getPastDateISO(i);
+        const dObj = new Date();
+        dObj.setDate(dObj.getDate() - i);
+        last7Days.push({
+          iso,
+          letter: dayLetters[dObj.getDay()],
+          isToday: i === 0
+        });
+      }
+
+      container.innerHTML = state.habits.map(habit => {
+        const isDoneToday = habit.completedDates.includes(today);
+        const streak = calculateStreak(habit.completedDates);
+
+        const dotsHtml = last7Days.map(day => {
+          const checked = habit.completedDates.includes(day.iso);
+          return `
+            <div class="flex flex-col items-center gap-1">
+              <span class="text-[9px] font-bold opacity-60">${day.letter}</span>
+              <div class="w-4 h-4 rounded-full flex items-center justify-center transition-all ${day.isToday ? 'ring-1 ring-white/50' : ''}"
+                   style="background: ${checked ? 'var(--accent)' : 'rgba(128,128,128,0.22)'};">
+                ${checked ? '<div class="w-1.5 h-1.5 rounded-full bg-white"></div>' : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        return `
+          <div class="glass-card rounded-3xl p-4 flex flex-col gap-3">
+            <div class="flex items-center justify-between gap-3">
+              <button onclick="toggleHabitToday('${habit.id}')" class="flex items-center gap-3 flex-1 text-left">
+                <div class="w-7 h-7 rounded-xl flex items-center justify-center border transition-all shrink-0"
+                     style="background: ${isDoneToday ? 'var(--accent)' : 'transparent'}; border-color: ${isDoneToday ? 'var(--accent)' : 'rgba(255,255,255,0.35)'};">
+                  ${isDoneToday ? '<i data-lucide="check" class="w-4 h-4 text-white"></i>' : ''}
+                </div>
+                <div>
+                  <div class="text-sm font-bold ${isDoneToday ? 'line-through opacity-70' : ''}">${escapeHtml(habit.name)}</div>
+                  <div class="text-xs font-semibold flex items-center gap-1 mt-0.5" style="color: var(--accent);">
+                    <span>🔥 ${streak} day streak</span>
+                  </div>
+                </div>
+              </button>
+
+              <button onclick="deleteHabit('${habit.id}')" class="p-2 opacity-50 hover:opacity-100 text-rose-400" aria-label="Delete habit">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+
+            <!-- 7-Day Dot Strip -->
+            <div class="flex items-center justify-between pt-2 border-t border-white/10 px-1">
+              ${dotsHtml}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function handleAddHabit(e) {
+      e.preventDefault();
+      const input = document.getElementById('new-habit-input');
+      const name = input.value.trim();
+      if (!name) return;
+      addHabitByName(name);
+      input.value = '';
+    }
+
+    function addHabitByName(name) {
+      state.habits.push({
+        id: 'hb-' + Date.now(),
+        name,
+        completedDates: []
+      });
+      saveState();
+      renderHabitsTab();
+      showToast(`Added habit: ${name}`);
+    }
+
+    function toggleHabitToday(habitId) {
+      const habit = state.habits.find(h => h.id === habitId);
+      if (!habit) return;
+      const today = getTodayISO();
+      const idx = habit.completedDates.indexOf(today);
+      if (idx === -1) {
+        habit.completedDates.push(today);
+        showToast(`Completed: ${habit.name} 🎉`);
+      } else {
+        habit.completedDates.splice(idx, 1);
+      }
+      saveState();
+      renderHabitsTab();
+    }
+
+    function deleteHabit(habitId) {
+      state.habits = state.habits.filter(h => h.id !== habitId);
+      saveState();
+      renderHabitsTab();
+      showToast('Habit deleted');
+    }
+
+    /* ==========================================================================
+       9. ON-DEVICE COMMAND ASSISTANT
+       ========================================================================== */
+    function renderAssistantTab() {
+      const chipsContainer = document.getElementById('assistant-chips');
+      chipsContainer.innerHTML = QUICK_CHIPS.map(chip => `
+        <button onclick="runAssistantCommand('${chip.replace(/'/g, "\\'")}')"
+                class="glass-card px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap active:scale-95 transition-transform">
+          ${escapeHtml(chip)}
+        </button>
+      `).join('');
+
+      renderChatMessages();
+    }
+
+    function renderChatMessages() {
+      const box = document.getElementById('assistant-messages');
+      box.innerHTML = state.chatHistory.map(msg => {
+        const isUser = msg.sender === 'user';
+        return `
+          <div class="flex ${isUser ? 'justify-end' : 'justify-start'} animate-pop">
+            <div class="max-w-[82%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${isUser ? 'text-white font-medium' : 'glass-card'}"
+                 style="${isUser ? 'background: var(--accent);' : ''}">
+              ${escapeHtml(msg.text)}
+            </div>
+          </div>
+        `;
+      }).join('');
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function clearAssistantChat() {
+      state.chatHistory = [
+        { sender: 'bot', text: 'Chat cleared. Ready for your next command, Yashu!' }
+      ];
+      saveState();
+      renderChatMessages();
+    }
+
+    function handleAssistantSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById('assistant-input');
+      const cmd = input.value.trim();
+      if (!cmd) return;
+      input.value = '';
+      runAssistantCommand(cmd);
+    }
+
+    function runAssistantCommand(rawCmd) {
+      state.chatHistory.push({ sender: 'user', text: rawCmd });
+      const lower = rawCmd.toLowerCase().trim();
+      let reply = '';
+
+      // 1. "add habit X"
+      if (lower.startsWith('add habit ')) {
+        const habitName = rawCmd.slice(10).trim();
+        if (habitName) {
+          addHabitByName(habitName);
+          reply = `Added "${habitName}" to your daily habits.`;
+        } else {
+          reply = 'Please specify a habit name, e.g. "add habit Read".';
+        }
+      }
+      // 2. "done X"
+      else if (lower.startsWith('done ')) {
+        const target = lower.slice(5).trim();
+        const habit = state.habits.find(h => h.name.toLowerCase().includes(target));
+        if (habit) {
+          const today = getTodayISO();
+          if (!habit.completedDates.includes(today)) {
+            habit.completedDates.push(today);
+            saveState();
+            renderHabitsTab();
+          }
+          const streak = calculateStreak(habit.completedDates);
+          reply = `Marked "${habit.name}" done for today! Current streak: ${streak} day(s).`;
+        } else {
+          reply = `Couldn't find a habit matching "${target}".`;
+        }
+      }
+      // 3. "theme <color>"
+      else if (lower.startsWith('theme ')) {
+        const colorName = lower.slice(6).trim();
+        const found = ACCENT_COLORS.find(c => c.name === colorName);
+        if (found) {
+          setAccentColor(found.hex);
+          reply = `Accent theme set to ${found.name}.`;
+        } else {
+          reply = `Available colors: ${ACCENT_COLORS.map(c => c.name).join(', ')}.`;
+        }
+      }
+      // 4. "wallpaper <preset>"
+      else if (lower.startsWith('wallpaper ')) {
+        const wpName = lower.slice(10).trim();
+        const found = WALLPAPERS.find(w => w.id === wpName || w.name.toLowerCase() === wpName);
+        if (found) {
+          setWallpaperPreset(found.id);
+          reply = `Wallpaper switched to ${found.name}.`;
+        } else {
+          reply = `Available wallpapers: ${WALLPAPERS.map(w => w.name.toLowerCase()).join(', ')}.`;
+        }
+      }
+      // 5. "blur <number>"
+      else if (lower.startsWith('blur ')) {
+        const val = parseInt(lower.slice(5).trim(), 10);
+        if (!isNaN(val) && val >= 0 && val <= 40) {
+          updateGeometry('blur', val);
+          reply = `Glass blur updated to ${val}px.`;
+        } else {
+          reply = 'Please specify a blur value between 0 and 40 (e.g. "blur 30").';
+        }
+      }
+      // 6. "dark mode" / "light mode"
+      else if (lower === 'dark mode' || lower === 'dark') {
+        toggleThemeMode('dark');
+        reply = 'Switched to Dark Mode.';
+      } else if (lower === 'light mode' || lower === 'light') {
+        toggleThemeMode('light');
+        reply = 'Switched to Light Mode.';
+      }
+      // 7. "add shortcut Name site.com"
+      else if (lower.startsWith('add shortcut ')) {
+        const rest = rawCmd.slice(13).trim();
+        const parts = rest.split(/\s+/);
+        if (parts.length >= 2) {
+          const urlPart = parts.pop();
+          const namePart = parts.join(' ');
+          const cleanUrl = normalizeUrl(urlPart);
+          state.shortcuts.push({
+            id: 'sc-' + Date.now(),
+            name: namePart,
+            url: cleanUrl,
+            icon: 'globe',
+            color: state.accent
+          });
+          saveState();
+          renderHomeShortcuts();
+          reply = `Shortcut "${namePart}" (${cleanUrl}) added to Home!`;
+        } else {
+          reply = 'Format: "add shortcut Name site.com"';
+        }
+      }
+      // 8. "open <App>"
+      else if (lower.startsWith('open ')) {
+        const appQuery = lower.slice(5).trim();
+        const match = getCombinedApps().find(a => a.name.toLowerCase().includes(appQuery));
+        if (match) {
+          window.open(match.url, '_blank', 'noopener,noreferrer');
+          reply = `Opening ${match.name}...`;
+        } else {
+          const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(appQuery)}`;
+          window.open(searchUrl, '_blank', 'noopener,noreferrer');
+          reply = `Searching web for "${appQuery}"...`;
+        }
+      }
+      // 9. "layout niagara" / "layout nova"
+      else if (lower.startsWith('layout ')) {
+        const mode = lower.slice(7).trim();
+        if (mode === 'niagara' || mode === 'nova') {
+          setLauncherStyle(mode);
+          switchTab('home');
+          reply = `Switched launcher layout to ${mode.charAt(0).toUpperCase() + mode.slice(1)}.`;
+        } else {
+          reply = 'Choose either "layout niagara" or "layout nova".';
+        }
+      }
+      // 10. "progress"
+      else if (lower === 'progress') {
+        const today = getTodayISO();
+        const total = state.habits.length;
+        const done = state.habits.filter(h => h.completedDates.includes(today)).length;
+        const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+        reply = `You've completed ${done} of ${total} habits today (${pct}%). Keep going, ${state.userName}!`;
+      }
+      // 10b. "lock screen"
+      else if (lower === 'lock screen' || lower === 'lock') {
+        lockDeviceScreen();
+        reply = 'Screen locked with Always-On Display.';
+      }
+      // 11. "surprise me"
+      else if (lower === 'surprise me') {
+        const randWp = WALLPAPERS[Math.floor(Math.random() * WALLPAPERS.length)];
+        const randAccent = ACCENT_COLORS[Math.floor(Math.random() * ACCENT_COLORS.length)];
+        const randBlur = Math.floor(Math.random() * 25) + 10;
+        state.wallpaperId = randWp.id;
+        state.accent = randAccent.hex;
+        state.blur = randBlur;
+        saveState();
+        applyVisualSettings();
+        renderStyleTab();
+        reply = `Surprise makeover! Applied "${randWp.name}" wallpaper, ${randAccent.name} accent, and ${randBlur}px glass blur.`;
+      }
+      // Fallback
+      else {
+        reply = 'Try commands like: "add habit Stretch", "done Stretch", "theme cyan", "wallpaper ocean", "lock screen", or "surprise me".';
+      }
+
+      state.chatHistory.push({ sender: 'bot', text: reply });
+      saveState();
+      renderChatMessages();
+    }
+
+    /* ==========================================================================
+       10. 12-CATEGORY SETTINGS & STYLE CUSTOMIZATION TAB
+       ========================================================================== */
+    function openSettingsCategory(catId) {
+      switchTab('style');
+      filterSettingsCategory(catId);
+    }
+
+    function filterSettingsCategory(catId) {
+      activeSettingsCategory = catId;
+      renderSettingsPills();
+      document.querySelectorAll('.settings-section').forEach(sec => {
+        const secKey = sec.id.replace('settings-sec-', '');
+        sec.classList.toggle('hidden', catId !== 'all' && secKey !== catId);
+      });
+    }
+
+    function renderSettingsPills() {
+      const container = document.getElementById('settings-category-pills');
+      if (!container) return;
+      container.innerHTML = SETTINGS_CATEGORIES.map(cat => {
+        const active = activeSettingsCategory === cat.id;
+        return `
+          <button onclick="filterSettingsCategory('${cat.id}')"
+                  class="px-3 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap transition-all ${active ? 'text-white shadow' : 'glass-card opacity-85'}"
+                  style="${active ? 'background: var(--accent);' : ''}">
+            ${cat.label}
+          </button>
+        `;
+      }).join('');
+    }
+
+    function renderStyleTab() {
+      renderSettingsPills();
+
+      // Full Themes Grid
+      const themesGrid = document.getElementById('themes-preset-grid');
+      if (themesGrid) {
+        themesGrid.innerHTML = FULL_THEMES.map(th => `
+          <button onclick="applyFullTheme('${th.id}')"
+                  class="glass-strong rounded-2xl p-3 text-left flex items-center gap-2.5 active:scale-95 transition-transform border border-white/15">
+            <span class="w-7 h-7 rounded-full shrink-0 shadow-md border border-white/40" style="background: ${th.accent};"></span>
+            <div class="min-w-0">
+              <div class="text-xs font-extrabold truncate">${th.name}</div>
+              <div class="text-[10px] opacity-70 truncate">${th.desc}</div>
+            </div>
+          </button>
+        `).join('');
+      }
+
+      // Widget Status Badges
+      const wState = state.widgets || { clock: true, calendar: true, weather: true, battery: true, dock: true };
+      const widgetMap = [
+        ['status-widget-clock', wState.clock],
+        ['status-widget-calendar', wState.calendar],
+        ['status-widget-weather', wState.weather],
+        ['status-widget-battery', wState.battery]
+      ];
+      widgetMap.forEach(([elId, isOn]) => {
+        const badge = document.getElementById(elId);
+        if (badge) {
+          badge.textContent = isOn ? 'ON' : 'OFF';
+          badge.style.background = isOn ? 'var(--accent)' : 'rgba(128,128,128,0.25)';
+          badge.style.color = isOn ? '#ffffff' : 'inherit';
+        }
+      });
+
+      const dockVisBtn = document.getElementById('toggle-dock-visible');
+      if (dockVisBtn) {
+        dockVisBtn.textContent = wState.dock ? 'Dock: ON' : 'Dock: OFF';
+        dockVisBtn.style.background = wState.dock ? 'var(--accent)' : '';
+        dockVisBtn.style.color = wState.dock ? '#ffffff' : '';
+      }
+
+      // Active Option Pills (Clock, IconPack, Font, Animation)
+      ['digital', 'editorial', 'stacked'].forEach(c => {
+        const btn = document.getElementById(`clk-opt-${c}`);
+        if (btn) {
+          btn.style.background = (state.clockDesign || 'digital') === c ? 'var(--accent)' : '';
+          btn.style.color = (state.clockDesign || 'digital') === c ? '#ffffff' : '';
+        }
+      });
+      ['vivid', 'monochrome', 'glass'].forEach(p => {
+        const btn = document.getElementById(`iconpack-${p}`);
+        if (btn) {
+          btn.style.background = (state.iconPackStyle || 'vivid') === p ? 'var(--accent)' : '';
+          btn.style.color = (state.iconPackStyle || 'vivid') === p ? '#ffffff' : '';
+        }
+      });
+      ['sans', 'jakarta', 'serif', 'mono'].forEach(f => {
+        const btn = document.getElementById(`font-opt-${f}`);
+        if (btn) {
+          btn.style.background = (state.fontStyle || 'sans') === f ? 'var(--accent)' : '';
+          btn.style.color = (state.fontStyle || 'sans') === f ? '#ffffff' : '';
+        }
+      });
+      ['spring', 'smooth', 'snappy'].forEach(a => {
+        const btn = document.getElementById(`anim-opt-${a}`);
+        if (btn) {
+          btn.style.background = (state.animationStyle || 'spring') === a ? 'var(--accent)' : '';
+          btn.style.color = (state.animationStyle || 'spring') === a ? '#ffffff' : '';
+        }
+      });
+
+      // Dock Tint Color Options
+      const dockColorGrid = document.getElementById('dock-color-grid');
+      if (dockColorGrid) {
+        dockColorGrid.innerHTML = DOCK_TINTS.map(dt => {
+          const isSelected = (state.dockColor || '') === dt.value;
+          return `
+            <button onclick="setDockColor('${dt.value}')"
+                    class="px-2.5 py-1.5 rounded-xl text-[11px] font-semibold border transition-transform ${isSelected ? 'scale-105 border-white font-bold' : 'border-white/20 opacity-85'}"
+                    style="background: ${dt.value || 'rgba(255,255,255,0.18)'};">
+              ${dt.name}
+            </button>
+          `;
+        }).join('');
+      }
+
+      // Popup Folders List in Settings
+      const foldersList = document.getElementById('settings-folders-list');
+      if (foldersList) {
+        foldersList.innerHTML = (state.popupFolders || []).map(fld => `
+          <div class="glass-strong p-2.5 rounded-2xl flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full" style="background: ${fld.color};"></span>
+              <span class="font-bold">${escapeHtml(fld.name)}</span>
+              <span class="opacity-65">(${fld.appIds.length} apps)</span>
+            </div>
+            <button onclick="deletePopupFolder('${fld.id}')" class="text-rose-400 p-1">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        `).join('');
+      }
+
+      // Calendar Events List in Settings
+      const eventsList = document.getElementById('settings-events-list');
+      if (eventsList) {
+        eventsList.innerHTML = (state.calendarEvents || []).map(ev => `
+          <div class="glass-strong p-2.5 rounded-2xl flex items-center justify-between text-xs">
+            <div>
+              <span class="font-extrabold mr-2" style="color: var(--accent);">${escapeHtml(ev.time)}</span>
+              <span class="font-semibold">${escapeHtml(ev.title)}</span>
+            </div>
+            <button onclick="deleteCalendarEvent('${ev.id}')" class="text-rose-400 p-1">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        `).join('');
+      }
+
+      // Usage Breaker List
+      const ubList = document.getElementById('usage-breaker-list');
+      if (ubList) {
+        ubList.innerHTML = (state.usageLimits || []).map((u, idx) => `
+          <div class="glass-strong p-2.5 rounded-2xl flex items-center justify-between text-xs">
+            <div>
+              <div class="font-bold">${escapeHtml(u.appName)}</div>
+              <div class="text-[10px] opacity-75">Used: ${u.usedMins}m / Limit: ${u.limitMins}m</div>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button onclick="adjustUsageLimit(${idx}, -15)" class="w-7 h-7 rounded-xl glass-card font-bold">-15</button>
+              <button onclick="adjustUsageLimit(${idx}, 15)" class="w-7 h-7 rounded-xl glass-card font-bold">+15</button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // Gesture Selects Sync
+      const g = state.gestures || { swipeUp: 'drawer', swipeDown: 'notifications', doubleTap: 'lock' };
+      ['swipeUp', 'swipeDown', 'doubleTap'].forEach(k => {
+        const sel = document.getElementById(`gesture-${k}`);
+        if (sel) sel.value = g[k];
+      });
+
+      // Temp Unit & Vault PIN
+      const tempBtn = document.getElementById('btn-temp-unit');
+      if (tempBtn) tempBtn.textContent = `°${(state.weather && state.weather.unit) || 'C'}`;
+
+      const vaultBtn = document.getElementById('toggle-vault-pin');
+      if (vaultBtn) vaultBtn.textContent = state.vaultPinEnabled ? 'Enabled (1234)' : 'Disabled';
+
+      // Online HD Wallpapers Gallery
+      const onlineGrid = document.getElementById('online-wallpapers-grid');
+      if (onlineGrid) {
+        onlineGrid.innerHTML = ONLINE_WALLPAPERS.map(ow => {
+          const active = state.wallpaperId === ow.id;
+          return `
+            <button onclick="setWallpaperPreset('${ow.id}')"
+                    class="h-20 rounded-2xl relative overflow-hidden flex items-end p-2 text-left bg-cover bg-center transition-transform ${active ? 'ring-2 ring-white scale-[1.03]' : 'opacity-90'}"
+                    style="background-image: url('${ow.url}');">
+              <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
+              <span class="relative z-10 text-[10px] font-bold text-white drop-shadow">${ow.name}</span>
+            </button>
+          `;
+        }).join('');
+      }
+
+      // Accent Colors
+      const accentGrid = document.getElementById('accent-picker-grid');
+      accentGrid.innerHTML = ACCENT_COLORS.map(c => {
+        const active = state.accent.toLowerCase() === c.hex.toLowerCase();
+        return `
+          <button onclick="setAccentColor('${c.hex}')"
+                  class="aspect-square rounded-full flex items-center justify-center transition-transform ${active ? 'scale-110 ring-2 ring-white' : 'opacity-85 hover:opacity-100'}"
+                  style="background-color: ${c.hex};"
+                  title="${c.name}">
+            ${active ? '<i data-lucide="check" class="w-3.5 h-3.5 text-white"></i>' : ''}
+          </button>
+        `;
+      }).join('');
+
+      // Wallpaper Presets
+      const wpGrid = document.getElementById('wallpaper-presets-grid');
+      wpGrid.innerHTML = WALLPAPERS.map(wp => {
+        const active = state.wallpaperId === wp.id;
+        return `
+          <button onclick="setWallpaperPreset('${wp.id}')"
+                  class="h-16 rounded-2xl relative overflow-hidden flex items-end p-2 text-left transition-transform ${active ? 'ring-2 ring-white scale-[1.03]' : 'opacity-85'}"
+                  style="background: ${wp.css};">
+            <span class="text-[10px] font-bold text-white drop-shadow">${wp.name}</span>
+          </button>
+        `;
+      }).join('');
+
+      // Hidden Apps Card
+      const hiddenCount = document.getElementById('hidden-apps-count');
+      const hiddenList = document.getElementById('hidden-apps-list');
+      if (hiddenCount) hiddenCount.textContent = state.hiddenAppIds.length;
+      if (hiddenList) {
+        if (state.hiddenAppIds.length > 0) {
+          hiddenList.innerHTML = state.hiddenAppIds.map(id => {
+            const app = ALL_APPS_CATALOG.find(a => a.id === id);
+            return `<span class="glass-card px-2.5 py-1 rounded-full text-xs font-medium">${app ? escapeHtml(app.name) : id}</span>`;
+          }).join('');
+        } else {
+          hiddenList.innerHTML = `<span class="text-[11px] opacity-60">No hidden apps</span>`;
+        }
+      }
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function setClockDesign(design) {
+      state.clockDesign = design;
+      saveState();
+      applyVisualSettings();
+      renderStyleTab();
+      showToast(`Clock style: ${design}`);
+    }
+
+    function setIconPackStyle(pack) {
+      state.iconPackStyle = pack;
+      saveState();
+      renderHomeShortcuts();
+      renderAppDrawer();
+      renderStyleTab();
+      showToast(`Icon pack: ${pack}`);
+    }
+
+    function setFontStyle(font) {
+      state.fontStyle = font;
+      saveState();
+      applyVisualSettings();
+      renderStyleTab();
+      showToast(`Font style: ${font}`);
+    }
+
+    function setAnimationStyle(anim) {
+      state.animationStyle = anim;
+      saveState();
+      applyVisualSettings();
+      renderStyleTab();
+      showToast(`Animation style: ${anim}`);
+    }
+
+    function applyMaterialYouTint() {
+      const wpAccentMap = {
+        aurora: '#10b981',
+        sunset: '#f59e0b',
+        ocean: '#06b6d4',
+        midnight: '#6366f1',
+        lavender: '#a855f7',
+        forest: '#10b981',
+        peach: '#f43f5e',
+        cyber: '#06b6d4',
+        'online-mountains': '#3b82f6',
+        'online-nebula': '#a855f7',
+        'online-tokyo': '#06b6d4',
+        'online-ocean': '#0284c7',
+        'online-forest': '#10b981',
+        'online-desert': '#f59e0b'
+      };
+      const dynamicHex = wpAccentMap[state.wallpaperId] || '#ec4899';
+      setAccentColor(dynamicHex);
+      showToast('Synced Material You dynamic color');
+    }
+
+    function handleCreateFolder(e) {
+      e.preventDefault();
+      const input = document.getElementById('new-folder-name');
+      const name = input.value.trim();
+      if (!name) return;
+      const sampleIds = getCombinedApps().slice(0, 4).map(a => a.id);
+      state.popupFolders.push({
+        id: 'fld-' + Date.now(),
+        name,
+        color: state.accent,
+        appIds: sampleIds
+      });
+      input.value = '';
+      saveState();
+      renderPopupFoldersRow();
+      renderStyleTab();
+      showToast(`Created "${name}" folder`);
+    }
+
+    function deletePopupFolder(id) {
+      state.popupFolders = (state.popupFolders || []).filter(f => f.id !== id);
+      saveState();
+      renderPopupFoldersRow();
+      renderStyleTab();
+      showToast('Folder deleted');
+    }
+
+    function handleAddCalendarEvent(e) {
+      e.preventDefault();
+      const time = document.getElementById('new-event-time').value || '12:00';
+      const titleInput = document.getElementById('new-event-title');
+      const title = titleInput.value.trim();
+      if (!title) return;
+      state.calendarEvents.push({
+        id: 'ev-' + Date.now(),
+        time,
+        title,
+        done: false
+      });
+      titleInput.value = '';
+      saveState();
+      renderCalendarWidget();
+      renderStyleTab();
+      showToast('Event added to Home');
+    }
+
+    function toggleCalendarEventDone(id) {
+      const ev = (state.calendarEvents || []).find(item => item.id === id);
+      if (!ev) return;
+      ev.done = !ev.done;
+      saveState();
+      renderCalendarWidget();
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function deleteCalendarEvent(id) {
+      state.calendarEvents = (state.calendarEvents || []).filter(ev => ev.id !== id);
+      saveState();
+      renderCalendarWidget();
+      renderStyleTab();
+      showToast('Event removed');
+    }
+
+    function selectWeatherCity(city, lat, lon) {
+      state.weather.city = city;
+      state.weather.lat = lat;
+      state.weather.lon = lon;
+      saveState();
+      fetchLiveWeather();
+      showToast(`Fetching weather for ${city}...`);
+    }
+
+    function toggleTempUnit() {
+      state.weather.unit = state.weather.unit === 'C' ? 'F' : 'C';
+      saveState();
+      renderWeatherWidget();
+      renderStyleTab();
+    }
+
+    function adjustUsageLimit(idx, delta) {
+      const item = state.usageLimits[idx];
+      if (!item) return;
+      item.limitMins = Math.max(15, item.limitMins + delta);
+      saveState();
+      renderStyleTab();
+      showToast(`${item.appName} limit: ${item.limitMins} mins`);
+    }
+
+    function updateGesture(key, val) {
+      if (!state.gestures) state.gestures = {};
+      state.gestures[key] = val;
+      saveState();
+      showToast(`Updated ${key} gesture`);
+    }
+
+    function toggleVaultPin() {
+      state.vaultPinEnabled = !state.vaultPinEnabled;
+      saveState();
+      renderStyleTab();
+      showToast(`App Vault PIN ${state.vaultPinEnabled ? 'Enabled' : 'Disabled'}`);
+    }
+
+    function exportLauncherBackup() {
+      try {
+        const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `my-phone-launcher-backup-${getTodayISO()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('Backup JSON downloaded');
+      } catch (err) {
+        showToast('Backup export failed');
+      }
+    }
+
+    function importLauncherBackup(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = evt => {
+        try {
+          const imported = JSON.parse(evt.target.result);
+          state = { ...JSON.parse(JSON.stringify(defaultState)), ...imported };
+          saveState();
+          applyVisualSettings();
+          renderAll();
+          showToast('Backup restored successfully!');
+        } catch (err) {
+          showToast('Invalid backup JSON file');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function resetLauncherDefaults() {
+      state = JSON.parse(JSON.stringify(defaultState));
+      state.onboardingDone = true;
+      saveState();
+      applyVisualSettings();
+      renderAll();
+      showToast('Launcher reset to factory defaults');
+    }
+
+    function applyFullTheme(themeId) {
+      const th = FULL_THEMES.find(t => t.id === themeId);
+      if (!th) return;
+      state.theme = th.theme;
+      state.accent = th.accent;
+      state.wallpaperId = th.wallpaperId;
+      state.blur = th.blur;
+      state.iconRadius = th.iconRadius;
+      state.dockColor = th.dockColor;
+      saveState();
+      applyVisualSettings();
+      renderHomeShortcuts();
+      renderStyleTab();
+      switchTab(activeTab);
+      showToast(`Applied "${th.name}" Theme`);
+    }
+
+    function toggleWidget(widgetKey) {
+      if (!state.widgets) state.widgets = { clock: true, calendar: true, weather: true, battery: true, dock: true };
+      state.widgets[widgetKey] = !state.widgets[widgetKey];
+      saveState();
+      applyVisualSettings();
+      renderStyleTab();
+      showToast(`${widgetKey.charAt(0).toUpperCase() + widgetKey.slice(1)} ${state.widgets[widgetKey] ? 'shown' : 'hidden'}`);
+    }
+
+    function updateUserName(newName) {
+      const clean = (newName || '').trim();
+      if (!clean) return;
+      state.userName = clean;
+      saveState();
+      updateClock();
+      showToast(`Greeting updated for ${clean}`);
+    }
+
+    function setDockColor(colorVal) {
+      state.dockColor = colorVal;
+      saveState();
+      applyVisualSettings();
+      renderStyleTab();
+      showToast('Dock color updated');
+    }
+
+    function applyCustomWallpaperUrl(e) {
+      e.preventDefault();
+      const input = document.getElementById('online-wp-url-input');
+      const url = (input.value || '').trim();
+      if (!url) return;
+      state.customWallpaper = url;
+      state.wallpaperId = 'custom';
+      saveState();
+      applyVisualSettings();
+      renderStyleTab();
+      input.value = '';
+      showToast('Online wallpaper applied');
+    }
+
+    function setAccentColor(hex) {
+      state.accent = hex;
+      saveState();
+      applyVisualSettings();
+      renderStyleTab();
+      switchTab(activeTab);
+    }
+
+    function setWallpaperPreset(id) {
+      state.wallpaperId = id;
+      saveState();
+      applyVisualSettings();
+      renderStyleTab();
+    }
+
+    function handleWallpaperUpload(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        state.customWallpaper = evt.target.result;
+        state.wallpaperId = 'custom';
+        saveState();
+        applyVisualSettings();
+        renderStyleTab();
+        showToast('Custom wallpaper applied');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function updateGeometry(prop, rawValue) {
+      const val = Number(rawValue);
+      state[prop] = val;
+      saveState();
+      applyVisualSettings();
+      if (prop === 'dockSize' || prop === 'dockCount') {
+        renderHomeShortcuts();
+      }
+    }
+
+    /* ==========================================================================
+       11. UTILITIES (TOAST & HTML ESCAPING)
+       ========================================================================== */
+    let toastTimeout = null;
+    function showToast(message) {
+      const banner = document.getElementById('toast-banner');
+      document.getElementById('toast-text').textContent = message;
+      banner.classList.remove('opacity-0', 'translate-y-[-10px]');
+      banner.classList.add('opacity-100', 'translate-y-0');
+
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        banner.classList.add('opacity-0', 'translate-y-[-10px]');
+        banner.classList.remove('opacity-100', 'translate-y-0');
+      }, 2200);
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // Boot launcher on load
+    window.addEventListener('DOMContentLoaded', initApp);
+  </script>
+</body>
+</html>
